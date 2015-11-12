@@ -3,6 +3,7 @@ A simple HTTP Server providing access to a database.
 
 # Build
 Project uses CMake build system. Default Unix steps:
+
 1. Create build directory: `mkdir build`
 2. Enter build directory: `cd build`
 3. Call Cmake: `cmake ..`
