@@ -17,5 +17,9 @@ void hello() {
     std::cout << "Hello Parser!!!" << std::endl;
 }
 
+int increment(int& x) {
+    return ++x;
+}
+
 }
 

@@ -23,9 +23,14 @@ message(STATUS "Configuring ${PROJECT_NAME}...")
 #
 option(BUILD_TESTS "build tests" ON)
 
+# Subdirectories
+#
+SET(LIBS_DIR ${PROJECT_SOURCE_DIR}/libs)
+SET(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
+
 # Set up general include directories
 #
-include_directories(SYSTEM ./libs)
+include_directories(SYSTEM ${LIBS_DIR})
 
 # Set up DEBUG defines
 #
@@ -56,5 +61,5 @@ add_subdirectory(HttpServer)
 
 # optionally build tests
 if (BUILD_TESTS)
-    # add tests subdirectory
+    add_subdirectory(${TESTS_DIR})
 endif()

@@ -7,11 +7,5 @@
  * Patryk Szypulski
  */
 
-#pragma once
-
-namespace HttpParser {
-
-void hello();
-int increment(int& x);
-
-}
+#define CATCH_CONFIG_MAIN
+#include "catch/catch.hpp"
