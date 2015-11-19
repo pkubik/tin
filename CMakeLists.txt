@@ -65,3 +65,7 @@ add_subdirectory(targets/Application)
 if (BUILD_TESTS)
     add_subdirectory(${TESTS_DIR})
 endif()
+
+# copy resources
+#
+file(COPY res DESTINATION .)
