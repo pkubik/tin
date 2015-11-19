@@ -22,4 +22,3 @@ int increment(int& x) {
 }
 
 }
-

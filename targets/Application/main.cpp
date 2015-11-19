@@ -7,7 +7,7 @@
  * Patryk Szypulski
  */
 
-#include "HttpServer.hpp"
+#include "HttpServer/HttpServer.hpp"
 #include "HttpParser/HttpParser.hpp"
 
 namespace server = HttpServer;
@@ -19,4 +19,3 @@ int main()
     server::hello();
     return 0;
 }
-

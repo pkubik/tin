@@ -1,5 +1,5 @@
-# HttpServer
-A simple HTTP Server providing access to a database.
+# Tin
+An application providing a Database access via HTTP.
 
 # Build
 Project uses CMake build system. Default Unix steps:
@@ -10,6 +10,6 @@ Project uses CMake build system. Default Unix steps:
 4. Call make: `make`
 
 # Running
-After a successful build run the main server executable: `./HttpServer/HttpServer`
+After a successful build run the main server executable: `./bin/Tin`
 
 ... to be continued
