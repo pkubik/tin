@@ -2,7 +2,7 @@
 #  Pawel Kubik
 #
 
-project(HttpServer)
+project(Network)
 
 message(STATUS "")
 message(STATUS "Configuring ${PROJECT_NAME}...")
@@ -13,7 +13,4 @@ file(GLOB_RECURSE SRCS  *.cpp)
 # Set up targets
 add_library(${PROJECT_NAME} SHARED ${SRCS})
 
-# Set up dependencies
-add_dependencies(${PROJECT_NAME} HttpParser Network)
-
-target_link_libraries(${PROJECT_NAME} HttpParser Network)
+target_link_libraries(${PROJECT_NAME} Common)

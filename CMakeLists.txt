@@ -43,8 +43,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 # CXX Compiler settings
 #
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "DEBUG")
+endif(NOT CMAKE_BUILD_TYPE)
+
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++11 -pedantic")
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -lpthread -pedantic -O2 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -lpthread -pedantic -O2 -DNDEBUG")
+    if (CMAKE_BUILD_TYPE STREQUAL DEBUG)
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -O0 -ggdb")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+    endif (CMAKE_BUILD_TYPE STREQUAL DEBUG)
 elseif (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /FORCE:MULTIPLE")
 endif (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clang)
@@ -54,6 +64,8 @@ endif (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clan
 
 # specify subprojects
 
+add_subdirectory(targets/Common)
+add_subdirectory(targets/Network)
 add_subdirectory(targets/HttpParser)
 add_subdirectory(targets/HttpServer)
 #add_subdirectory(targets/AnyNewTarget)

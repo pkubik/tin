@@ -23,6 +23,6 @@ add_executable(${UT_CODENAME} ${SRCS})
 include_directories(${TESTS_DIR})
 
 # Set up dependencies
-add_dependencies(${UT_CODENAME} HttpServer HttpParser)
+add_dependencies(${UT_CODENAME} Common Network HttpServer HttpParser)
 
-target_link_libraries(${UT_CODENAME} HttpServer HttpParser)
+target_link_libraries(${UT_CODENAME} Common Network HttpServer HttpParser)

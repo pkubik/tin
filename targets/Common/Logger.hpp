@@ -20,6 +20,8 @@ enum LogLevel
     HELP_LEVEL
 };
 
+namespace {
+
 constexpr char* LOG_LEVEL_STRINGS[] =
 {
     "TRACE",
@@ -33,6 +35,8 @@ constexpr char* LOG_LEVEL_STRINGS[] =
 constexpr const char* toString(LogLevel severity)
 {
     return LOG_LEVEL_STRINGS[severity];
+}
+
 }
 
 class Logger
