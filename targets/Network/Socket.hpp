@@ -13,7 +13,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-namespace Network {
+namespace network {
 
 class Socket {
 public:

@@ -18,7 +18,7 @@
 #include "Socket.hpp"
 #include "Exception.hpp"
 
-namespace Network {
+namespace network {
 
 constexpr Socket::Details Socket::TCP;
 constexpr Socket::Details Socket::TCPv4;

@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace HttpServer {
+namespace server {
 
 void hello();
 

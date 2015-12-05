@@ -11,11 +11,7 @@
 
 #include <iostream>
 
-namespace HttpParser {
-
-void hello() {
-    std::cout << "Hello Parser!!!" << std::endl;
-}
+namespace parser {
 
 int increment(int& x) {
     return ++x;

@@ -11,8 +11,6 @@
 
 #include "HttpParser/HttpParser.hpp"
 
-namespace parser = HttpParser;
-
 TEST_CASE( "Simple increment function", "[unit test framework]" ) {
     int x = 5;
     REQUIRE( parser::increment(x) == 6 );

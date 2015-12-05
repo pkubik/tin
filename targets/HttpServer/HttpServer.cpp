@@ -11,7 +11,7 @@
 
 #include <iostream>
 
-namespace HttpServer {
+namespace server {
 
 void hello() {
     std::cout << "Hello Server!!!" << std::endl;

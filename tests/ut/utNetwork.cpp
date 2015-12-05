@@ -14,13 +14,11 @@
 #include "Network/Socket.hpp"
 #include "Network/Exception.hpp"
 
-namespace net = Network;
-
 TEST_CASE( "Socket init and close", "[Network::Socket]" ) {
-    net::Socket socket;
+    network::Socket socket;
     REQUIRE(socket.isClosed());
 
-    socket.bind("localhost", "0", net::Socket::TCP);
+    socket.bind("localhost", "0", network::Socket::TCP);
     REQUIRE(!socket.isClosed());
 
     socket.close();
@@ -28,33 +26,33 @@ TEST_CASE( "Socket init and close", "[Network::Socket]" ) {
 }
 
 TEST_CASE( "Unknown address", "[Network::Socket]" ) {
-    net::Socket socket;
+    network::Socket socket;
 
-    REQUIRE_THROWS(socket.bind(".*/definitely_unknown=address", "and0port", net::Socket::TCP));
+    REQUIRE_THROWS(socket.bind(".*/definitely_unknown=address", "and0port", network::Socket::TCP));
 
     REQUIRE(socket.isClosed());
 }
 
 TEST_CASE( "Socket listen error", "[Network::Socket]" ) {
-    net::Socket socket;
+    network::Socket socket;
 
     REQUIRE_THROWS(socket.listen(0));
 }
 
 TEST_CASE( "Socket send and recv", "[Network::Socket]" ) {
-    net::Socket server;
-    server.bind("localhost", "0", net::Socket::TCPv4);
+    network::Socket server;
+    server.bind("localhost", "0", network::Socket::TCPv4);
     auto address = server.getAddress();
     server.listen(10);
 
     auto clientThread = std::thread([&] {
-        net::Socket client;
-        client.connect("localhost", std::to_string(address.getPort()), net::Socket::TCP);
+        network::Socket client;
+        client.connect("localhost", std::to_string(address.getPort()), network::Socket::TCP);
         client.send("ABC");
         REQUIRE(client.recv() == "XYZ");
     });
 
-    net::Socket::Address addr;
+    network::Socket::Address addr;
     auto connection = server.accept(addr);
     REQUIRE(connection.recv() == "ABC");
     connection.send("XYZ");

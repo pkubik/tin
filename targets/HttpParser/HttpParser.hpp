@@ -9,9 +9,10 @@
 
 #pragma once
 
-namespace HttpParser {
+namespace parser {
 
-void hello();
 int increment(int& x);
+
+
 
 }
