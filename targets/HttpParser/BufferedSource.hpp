@@ -9,21 +9,23 @@
 
 #pragma once
 
-#include <array>
+#include <cstdlib>
+#include <vector>
+
+namespace parser {
+
+class SourceReader {
+public:
+    virtual int read(char* buffer, size_t length) = 0;
+};
 
 /**
  * Buffered byte input class.
- *
- * SourceType - class providing a read method
- * BS - buffer size, number of bytes that can be looked ahead
  */
-template <typename SourceType, size_t BS = 64>
 class BufferedInput {
 private:
-    typedef std::array<char, BS> BufferType;
-
-    SourceType& source;
-    BufferType buffer;
+    SourceReader& source;
+    std::vector<char> buffer;
 
     /** index of a last available character + 1, 0 for EOF */
     size_t end = 0;
@@ -39,14 +41,16 @@ private:
 
         if (cursor >= end) {
             cursor = 0;
-            end = source.read(buffer.data(), BS);
+            end = source.read(buffer.data(), buffer.size());
         }
     }
 
 public:
-    BufferedInput(SourceType& source)
-        : source(source) {
-        end = source.read(buffer.data(), BS);
+    BufferedInput(SourceReader& source, size_t bufferLength)
+        : source(source)
+        , buffer(bufferLength) {
+
+        end = source.read(buffer.data(), bufferLength);
     }
 
     char getChar() {
@@ -78,3 +82,5 @@ public:
         return end;
     }
 };
+
+}

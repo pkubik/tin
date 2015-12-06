@@ -13,22 +13,24 @@
 
 #include "BufferedSource.hpp"
 
-template <typename SourceType>
-class Lexer {
-public:
-    struct Token {
-        enum Type {
-            WORD,
-            COLON,
-            BLANK,
-            END
-        };
+namespace parser {
 
-        Type type;
-        std::string value;
+struct Token {
+    enum Type {
+        WORD,
+        COLON,
+        BLANK, // space or tab
+        CRLF,  // line feed in any format
+        END
     };
 
-    Lexer(BufferedInput<SourceType>& source) : source(source) {}
+    Type type;
+    std::string value;
+};
+
+class Lexer {
+public:
+    Lexer(BufferedInput& source) : source(source) {}
 
     Token getToken() {
         if (!source) {
@@ -38,24 +40,33 @@ public:
         const char c = source.getChar();
 
         if (c == ':') {
-            return Token{Token::Type::COLON, c};
+            return Token{Token::Type::COLON, std::string(1, c)};
         }
 
-        if (::isblank(static_cast<int>(c))) {
-            return Token{Token::Type::BLANK, c};
+        if (::isspace(static_cast<int>(c))) {
+            if (::isblank(static_cast<int>(c))) {
+                return Token{Token::Type::BLANK, std::string(1, c)};
+            } else {
+                // TODO: capture whole line feeds as one token
+                return Token{Token::Type::CRLF, std::string(1, c)};
+            }
         }
 
-        auto token = Token{Token::Type::WORD, c};
+        // TODO: extract method
+        auto token = Token{Token::Type::WORD, std::string(1, c)};
 
         char n = source.peekChar();
-        while (n != ':' && !::isblank(static_cast<int>(n))) {
+        while (n != ':' && !::isspace(static_cast<int>(n))) {
             token.value += n;
             source.getChar();
+            n = source.peekChar();
         }
 
         return token;
     }
 
 private:
-    BufferedInput<SourceType>& source;
+    BufferedInput& source;
 };
+
+}
