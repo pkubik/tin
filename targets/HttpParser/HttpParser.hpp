@@ -13,6 +13,4 @@ namespace parser {
 
 int increment(int& x);
 
-
-
 }
