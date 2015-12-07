@@ -9,7 +9,7 @@
 
 # Set up main project
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(Tin)
 SET(PROJECT_AUTHOR "Pawel Kubik")
