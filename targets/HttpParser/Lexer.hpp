@@ -14,6 +14,7 @@
 #include "BufferedSource.hpp"
 
 namespace parser {
+namespace http {
 
 struct Token {
     enum Type {
@@ -47,26 +48,41 @@ public:
             if (::isblank(static_cast<int>(c))) {
                 return Token{Token::Type::BLANK, std::string(1, c)};
             } else {
-                // TODO: capture whole line feeds as one token
-                return Token{Token::Type::CRLF, std::string(1, c)};
+                auto token = Token{Token::Type::CRLF, std::string(1, c)};
+
+                if (c == '\r') {
+                    finishCrlf(token);
+                }
+
+                return token;
             }
         }
 
-        // TODO: extract method
         auto token = Token{Token::Type::WORD, std::string(1, c)};
+        finishWord(token);
+        return token;
+    }
 
+private:
+    BufferedInput& source;
+
+    void finishWord(Token& token) {
         char n = source.peekChar();
         while (n != ':' && !::isspace(static_cast<int>(n))) {
             token.value += n;
             source.getChar();
             n = source.peekChar();
         }
-
-        return token;
     }
 
-private:
-    BufferedInput& source;
+    void finishCrlf(Token& token) {
+        char n = source.peekChar();
+        if (n == '\n') {
+            token.value += n;
+            source.getChar();
+        }
+    }
 };
 
+}
 }
