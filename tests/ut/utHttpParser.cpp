@@ -12,7 +12,7 @@
 #include <sstream>
 
 #include "HttpParser/BufferedSource.hpp"
-#include "HttpParser/Lexer.hpp"
+#include "HttpParser/HttpLexer.hpp"
 
 using namespace parser;
 
