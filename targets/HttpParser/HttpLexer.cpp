@@ -7,7 +7,7 @@
  * Patryk Szypulski
  */
 
-#include "Lexer.hpp"
+#include "HttpLexer.hpp"
 
 namespace parser {
 namespace http {

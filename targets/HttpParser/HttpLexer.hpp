@@ -29,6 +29,9 @@ struct Token {
     std::string value;
 };
 
+/**
+ * @brief Http protocol lexer
+ */
 class Lexer {
 public:
     Lexer(BufferedInput& source) : source(source) {}
