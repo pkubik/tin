@@ -14,14 +14,14 @@
 #include "BufferedSource.hpp"
 
 namespace parser {
-namespace http {
+namespace uri {
 
 struct Token {
     enum Type {
-        WORD,
-        COLON,
-        BLANK, // space or tab
-        CRLF,  // line feed in any format
+        TEXT,
+        SLASH,
+        VAR,
+        ERROR,
         END
     };
 
@@ -30,7 +30,7 @@ struct Token {
 };
 
 /**
- * @brief Http protocol lexer
+ * @brief URI patterns lexer
  */
 class Lexer {
 public:
@@ -40,8 +40,8 @@ public:
 private:
     BufferedInput& source;
 
-    void finishWord(Token& token);
-    void finishCrlf(Token& token);
+    void finishText(Token& token);
+    void finishVar(Token& token);
 };
 
 }
