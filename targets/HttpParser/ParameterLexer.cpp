@@ -16,7 +16,7 @@ namespace parameter {
 namespace {
 
 bool isText(char c) {
-    return c != '=' && c != '&' && c != BufferedInput::END;//TODO: fix all
+    return c != '=' && c != '&' && c != BufferedInput::END;
 }
 
 }
