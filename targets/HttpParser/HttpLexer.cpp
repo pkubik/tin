@@ -15,17 +15,17 @@ namespace http {
 namespace {
 
 bool isOther(char c) {
-    return c != ':' && !::isspace(static_cast<int>(c));
+    return c != ':' && !::isspace(static_cast<int>(c)) && c != BufferedInput::END;
 }
 
 }
 
 Token Lexer::getToken() {
-    if (!source) {
+    const char c = source.getChar();
+
+    if (c == source.END) {
         return Token{Token::Type::END, ""};
     }
-
-    const char c = source.getChar();
 
     if (c == ':') {
         return Token{Token::Type::COLON, std::string(1, c)};

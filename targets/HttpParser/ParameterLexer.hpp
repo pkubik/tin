@@ -9,18 +9,18 @@
 
 #pragma once
 
-#include <string>
-
 #include "BufferedSource.hpp"
 
+#include <string>
+
 namespace parser {
-namespace uri {
+namespace parameter {
 
 struct Token {
-    enum Type : char {
+    enum Type {
         TEXT,
-        SLASH,
-        VAR,
+        EQUAL,
+        AND,
         ERROR,
         END
     };
@@ -30,7 +30,7 @@ struct Token {
 };
 
 /**
- * @brief URI patterns lexer
+ * @brief Http protocol lexer
  */
 class Lexer {
 public:
@@ -41,7 +41,7 @@ private:
     BufferedInput& source;
 
     void finishText(Token& token);
-    void finishVar(Token& token);
+    void finishChar(Token& token);
 };
 
 }
