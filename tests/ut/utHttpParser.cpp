@@ -14,6 +14,7 @@
 #include "HttpParser/BufferedSource.hpp"
 #include "HttpParser/HttpLexer.hpp"
 #include "HttpParser/UriLexer.hpp"
+#include "HttpParser/ParameterLexer.hpp"
 
 using namespace parser;
 
@@ -108,6 +109,55 @@ TEST_CASE( "URI lexer scanning corrupted input", "[Parser::URI]" ) {
         Token{Token::Type::VAR, "from"},
         Token{Token::Type::TEXT, "-"},
         Token{Token::Type::ERROR, "to/"},
+    };
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    Lexer lexer(bi);
+
+    for (auto& expToken : tokens) {
+        const auto& token = lexer.getToken();
+        CHECK(token.type == expToken.type);
+        CHECK(token.value == expToken.value);
+    }
+}
+
+TEST_CASE( "Parameter lexer scanning whole input", "[Parser::Parameter]" ) {
+    using namespace parser::parameter;
+
+    std::istringstream input("name=Gordon+Czapiger&specials="
+                             "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1");
+
+    const auto tokens = {
+        Token{Token::Type::TEXT, "name"},
+        Token{Token::Type::EQUAL, "="},
+        Token{Token::Type::TEXT, "Gordon Czapiger"},
+        Token{Token::Type::AND, "&"},
+        Token{Token::Type::TEXT, "specials"},
+        Token{Token::Type::EQUAL, "="},
+        Token{Token::Type::TEXT, "+!@#$%^&*(){}1"},
+    };
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    Lexer lexer(bi);
+
+    for (auto& expToken : tokens) {
+        const auto& token = lexer.getToken();
+        CHECK(token.type == expToken.type);
+        CHECK(token.value == expToken.value);
+    }
+}
+
+TEST_CASE( "Parameter lexer scanning corrupted input", "[Parser::Parameter]" ) {
+    using namespace parser::parameter;
+
+    std::istringstream input("name=%ZZ");
+
+    const auto tokens = {
+        Token{Token::Type::TEXT, "name"},
+        Token{Token::Type::EQUAL, "="},
+        Token{Token::Type::ERROR, "#"},
     };
 
     SourceWrapper source(input);

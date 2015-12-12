@@ -42,6 +42,10 @@ private:
         if (cursor >= end) {
             cursor = 0;
             end = source.read(buffer.data(), buffer.size());
+
+            if (end == 0) {
+                buffer[0] = END;
+            }
         }
     }
 
@@ -52,6 +56,8 @@ public:
 
         end = source.read(buffer.data(), bufferLength);
     }
+
+    static const char END = 0;
 
     char getChar() {
         char c = buffer[cursor];
