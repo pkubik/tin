@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "BufferedSource.hpp"
+#include "BufferedInput.hpp"
 
 namespace parser {
 namespace http {

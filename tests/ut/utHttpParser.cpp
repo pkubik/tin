@@ -11,7 +11,7 @@
 
 #include <sstream>
 
-#include "HttpParser/BufferedSource.hpp"
+#include "HttpParser/BufferedInput.hpp"
 #include "HttpParser/HttpLexer.hpp"
 #include "HttpParser/UriLexer.hpp"
 #include "HttpParser/ParameterLexer.hpp"

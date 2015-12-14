@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "BufferedSource.hpp"
+#include "BufferedInput.hpp"
 
 #include <string>
 

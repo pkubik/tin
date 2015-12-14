@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "HttpLexer.hpp"
+
 #include <string>
 #include <unordered_map>
 
@@ -43,6 +45,15 @@ private:
     HeaderMap headers;
     // message body is left in the buffer for another parser
 };
+
+class Parser {
+public:
+    Parser(BufferedInput& input) : lexer(input) {}
+
+private:
+    Lexer lexer;
+};
+
 
 }
 }
