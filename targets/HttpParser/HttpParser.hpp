@@ -85,7 +85,20 @@ private:
         , status(status) {}
 
     void parse();
+
+    /*
+     * All boolean parse internal methods returns true if succesfully parsed.
+     * False doesn't necessarily mean failure!
+     */
+
+    /** Returns true if succesfully parsed a Method */
     bool parseMethod();
+
+    /** Returns true if succesfully parsed a header */
+    bool parseHeader();
+
+    /** Returns true if succesfully parsed a header value */
+    bool parseHeaderValue(std::string& result);
 
     /** Parses any number of whitespaces */
     bool parseWhitespace();

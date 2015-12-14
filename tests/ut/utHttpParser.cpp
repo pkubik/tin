@@ -175,7 +175,11 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
     using namespace parser::http;
 
     std::istringstream input("GET\n"
-                             " /resource HTTP/1.1  \r\n");
+                             " /resource HTTP/1.1  \r\n"
+                             "Connection: keep-alive\r\n"
+                             "Multiline: a, b,\r\n"
+                             "           c, d\r\n"
+                             "\r\n");
 
     SourceWrapper source(input);
     BufferedInput bi(source, 10);
@@ -187,4 +191,8 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
     CHECK(req.getMethod() == Request::GET);
     CHECK(req.getUri() == "/resource");
     CHECK(req.getVersion() == "HTTP/1.1");
+
+    REQUIRE(req.getHeaders().size() == 2);
+    CHECK(req.getHeaders().at("Connection") == "keep-alive");
+    CHECK(req.getHeaders().at("Multiline") == "a, b, c, d");
 }

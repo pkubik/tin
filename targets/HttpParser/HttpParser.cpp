@@ -15,6 +15,14 @@
 namespace parser {
 namespace http {
 
+namespace {
+
+bool isText(const Token& token) {
+    return token.type != Token::CRLF && token.type != Token::END;
+}
+
+}
+
 Parser::Result Parser::parse(BufferedInput& input) {
     Result result;
 
@@ -60,7 +68,9 @@ void Parser::parse() {
         return;
     }
 
-    // TODO: Parse the rest of the header
+    while (parseHeader());
+
+    parseCRLF();
 }
 
 bool Parser::parseMethod() {
@@ -84,6 +94,66 @@ bool Parser::parseMethod() {
 
     token = lexer.getToken();
     return ret;
+}
+
+bool Parser::parseHeader() {
+    if (token.type != Token::WORD) {
+        if (token.type == Token::CRLF) {
+            // header list is empty
+            return false;
+        }
+        status.setError("Error parsing header name");
+        return false;
+    }
+    auto it = request.headers.insert(std::make_pair(token.value, ""));
+    // NOTE: according to RFC2616 parser should know all possible header-fields and
+    // their value structures and decide whether it is correct to allow header repetition
+
+    token = lexer.getToken();
+
+    skipBlanks();
+
+    if (token.type != Token::COLON) {
+        status.setError("Colon between header name and value expected");
+        return false;
+    }
+    token = lexer.getToken();
+
+    skipBlanks();
+
+    std::string value;
+    if (!parseHeaderValue(value)) {
+        return false;
+    }
+
+    it.first->second = value;
+
+    return true;
+}
+
+bool Parser::parseHeaderValue(std::string& result) {
+    for (;;) {
+        while (isText(token)) {
+            result += token.value;
+            token = lexer.getToken();
+        }
+
+        if (token.type == Token::CRLF) {
+            token = lexer.getToken();
+            if (token.type == Token::BLANK) {
+                skipBlanks();
+                result += ' ';
+                continue;
+            } else {
+                return true;
+            }
+        } else {
+            status.setError("Error parsing header value.");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool Parser::parseWhitespace() {
