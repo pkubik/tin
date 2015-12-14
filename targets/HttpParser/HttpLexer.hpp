@@ -30,7 +30,9 @@ struct Token {
 };
 
 /**
- * @brief Http protocol lexer
+ * @brief HTTP/1.1 protocol lexer
+ *
+ * This lexer is more permissive than actual HTTP standard.
  */
 class Lexer {
 public:

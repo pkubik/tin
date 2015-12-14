@@ -12,7 +12,7 @@
 #include <sstream>
 
 #include "HttpParser/BufferedInput.hpp"
-#include "HttpParser/HttpLexer.hpp"
+#include "HttpParser/HttpParser.hpp"
 #include "HttpParser/UriLexer.hpp"
 #include "HttpParser/ParameterLexer.hpp"
 
@@ -31,7 +31,7 @@ public:
     }
 };
 
-TEST_CASE( "Http lexer scanning whole input", "[Parser::HTTP]" ) {
+TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
     using namespace parser::http;
 
     std::istringstream input("GET \n"
@@ -169,4 +169,22 @@ TEST_CASE( "Parameter lexer scanning corrupted input", "[Parser::Parameter]" ) {
         CHECK(token.type == expToken.type);
         CHECK(token.value == expToken.value);
     }
+}
+
+TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
+    using namespace parser::http;
+
+    std::istringstream input("GET\n"
+                             " /resource HTTP/1.1  \r\n");
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    auto result = Parser::parse(bi);
+
+    REQUIRE(result.second == true);
+
+    auto& req = result.first;
+    CHECK(req.getMethod() == Request::GET);
+    CHECK(req.getUri() == "/resource");
+    CHECK(req.getVersion() == "HTTP/1.1");
 }

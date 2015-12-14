@@ -31,6 +31,10 @@ struct Token {
 
 /**
  * @brief URI patterns lexer
+ *
+ * Note that this class can be only used by URI patterns parser,
+ * which generates compiled URI pattern. Raw URIs extracted by
+ * HTTP parser are to be parsed using pattern comparator.
  */
 class Lexer {
 public:

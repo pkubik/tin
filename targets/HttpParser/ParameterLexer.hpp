@@ -30,7 +30,17 @@ struct Token {
 };
 
 /**
- * @brief Http protocol lexer
+ * @brief HTTP url-encoded parameter lexer
+ *
+ * HTML forms sends their data in two ways:
+ *  - using GET method and part of the URL after '?' character
+ *  - using POST method and any standard commonly accepted by browsers
+ *    like XML or url-encoding (same as in GET) which is specified in
+ *    Content-Type header
+ *
+ * This Lexer is intended to be used with raw url-encoded string i. e.
+ * either what's left in the buffer after parsing URL up to the '?'
+ * character or what's left in the buffer after parsing HTTP POST headers
  */
 class Lexer {
 public:

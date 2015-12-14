@@ -44,16 +44,58 @@ private:
 
     HeaderMap headers;
     // message body is left in the buffer for another parser
+
+    friend class Parser;
 };
 
 class Parser {
 public:
-    Parser(BufferedInput& input) : lexer(input) {}
+    class Status {
+    public:
+        bool isValid() const { return !error; }
+        operator bool () { return isValid(); }
+        const std::string& getErrorMessage() const { return message; }
+
+    private:
+        bool error = false;
+        std::string message;
+
+        void setError(const std::string& msg) {
+            error = true;
+            message = msg;
+        }
+
+        friend Parser;
+    };
+
+    typedef std::pair<Request, Status> Result;
+
+    static Result parse(BufferedInput& input);
 
 private:
     Lexer lexer;
-};
+    Token token;
+    Request& request;
+    Status& status;
 
+    Parser(BufferedInput& input, Request& request, Status& status)
+        : lexer(input)
+        , token(lexer.getToken())
+        , request(request)
+        , status(status) {}
+
+    void parse();
+    bool parseMethod();
+
+    /** Parses any number of whitespaces */
+    bool parseWhitespace();
+
+    /** Skips any number of spaces or tabs */
+    void skipBlanks();
+
+    /** Parses single CRLF */
+    bool parseCRLF();
+};
 
 }
 }
