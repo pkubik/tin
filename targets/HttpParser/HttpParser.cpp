@@ -42,8 +42,8 @@ void Parser::parse() {
         return;
     }
 
-    if (token.type == Token::WORD) {
-        request.uri = token.value;
+    if (token->type == Token::WORD) {
+        request.uri = token->as<Word>().value;
         token = lexer.getToken();
     } else {
         status.setError("Error parsing URI");
@@ -54,8 +54,8 @@ void Parser::parse() {
         return;
     }
 
-    if (token.type == Token::WORD) {
-        request.version = token.value;
+    if (token->type == Token::WORD) {
+        request.version = token->as<Word>().value;
         token = lexer.getToken();
     } else {
         status.setError("Error parsing HTTP version");
@@ -76,12 +76,13 @@ void Parser::parse() {
 bool Parser::parseMethod() {
     bool ret = true;
 
-    if (token.type == Token::WORD) {
-        if (token.value == "GET") {
+    if (token->type == Token::KEYWORD) {
+        auto& keyword = token->as<Keyword>();
+        if (keyword.id == Keyword::GET) {
             request.method = Request::GET;
-        } else if (token.value == "POST") {
+        } else if (keyword.id == Keyword::POST)  {
             request.method = Request::POST;
-        } else if (token.value == "HEAD") {
+        } else if (keyword.id == Keyword::HEAD) {
             request.method = Request::HEAD;
         } else {
             status.setError("Unknown method type");
@@ -97,15 +98,15 @@ bool Parser::parseMethod() {
 }
 
 bool Parser::parseHeader() {
-    if (token.type != Token::WORD) {
-        if (token.type == Token::CRLF) {
+    if (token->type != Token::WORD) {
+        if (token->type == Token::CRLF) {
             // header list is empty
             return false;
         }
         status.setError("Error parsing header name");
         return false;
     }
-    auto it = request.headers.insert(std::make_pair(token.value, ""));
+    auto it = request.headers.insert(std::make_pair(token->as<Word>().value, ""));
     // NOTE: according to RFC2616 parser should know all possible header-fields and
     // their value structures and decide whether it is correct to allow header repetition
 
@@ -113,7 +114,7 @@ bool Parser::parseHeader() {
 
     skipBlanks();
 
-    if (token.type != Token::COLON) {
+    if (token->type != Token::COLON) {
         status.setError("Colon between header name and value expected");
         return false;
     }
@@ -133,14 +134,14 @@ bool Parser::parseHeader() {
 
 bool Parser::parseHeaderValue(std::string& result) {
     for (;;) {
-        while (isText(token)) {
-            result += token.value;
+        while (isText(*token)) {
+            result += token->as<Word>().value;
             token = lexer.getToken();
         }
 
-        if (token.type == Token::CRLF) {
+        if (token->type == Token::CRLF) {
             token = lexer.getToken();
-            if (token.type == Token::BLANK) {
+            if (token->type == Token::BLANK) {
                 skipBlanks();
                 result += ' ';
                 continue;
@@ -159,7 +160,7 @@ bool Parser::parseHeaderValue(std::string& result) {
 bool Parser::parseWhitespace() {
     bool ret = false;
 
-    while (token.type == Token::BLANK || token.type == Token::CRLF) {
+    while (token->type == Token::BLANK || token->type == Token::CRLF) {
         ret = true;
         token = lexer.getToken();
     }
@@ -172,7 +173,7 @@ bool Parser::parseWhitespace() {
 }
 
 void Parser::skipBlanks() {
-    while (token.type == Token::BLANK) {
+    while (token->type == Token::BLANK) {
         token = lexer.getToken();
     }
 }
@@ -180,7 +181,7 @@ void Parser::skipBlanks() {
 bool Parser::parseCRLF() {
     bool ret = true;
 
-    if (token.type != Token::CRLF) {
+    if (token->type != Token::CRLF) {
         status.setError("CRLF expected");
         ret = false;
     }

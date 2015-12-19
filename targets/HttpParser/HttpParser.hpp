@@ -76,7 +76,7 @@ public:
 private:
     Lexer lexer;
     parameter::Lexer parameterLexer;
-    Token token;
+    std::unique_ptr<Token> token;
     Request& request;
     Status& status;
 
