@@ -146,7 +146,7 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
 
     auto& req = result.first;
     CHECK(req.getMethod() == Request::GET);
-    CHECK(req.getUri() == "/resource");
+    CHECK(req.getResource() == "/resource");
     CHECK(req.getVersion() == "HTTP/1.1");
 
     REQUIRE(req.getHeaders().size() == 2);
@@ -172,11 +172,43 @@ TEST_CASE( "HTTP parser parsing whole GET request with parameters.", "[Parser::H
 
     auto& req = result.first;
     CHECK(req.getMethod() == Request::GET);
-    CHECK(req.getUri() == "/resource");
+    CHECK(req.getResource() == "/resource");
     CHECK(req.getVersion() == "HTTP/1.1");
 
     REQUIRE(req.getHeaders().size() == 1);
     CHECK(req.getHeaders().at("Connection") == "keep-alive");
+
+    REQUIRE(req.getParameters().size() == 2);
+    CHECK(req.getParameters().at("name") == "Gordon Czapiger");
+    CHECK(req.getParameters().at("specials") == "+!@#$%^&*(){}1");
+}
+
+TEST_CASE( "HTTP parser parsing whole POST request with parameters.", "[Parser::HTTP]" ) {
+    using namespace parser::http;
+
+    std::istringstream input("POST "
+                             "/resource "
+                             "HTTP/1.1  \r\n"
+                             "Connection: keep-alive\r\n"
+                             "Content-Type: application/x-www-form-urlencoded\r\n"
+                             "\r\n"
+                             "name=Gordon+Czapiger&specials="
+                             "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1");
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    auto result = Parser::parse(bi);
+
+    REQUIRE(result.second == true);
+
+    auto& req = result.first;
+    CHECK(req.getMethod() == Request::POST);
+    CHECK(req.getResource() == "/resource");
+    CHECK(req.getVersion() == "HTTP/1.1");
+
+    REQUIRE(req.getHeaders().size() == 2);
+    CHECK(req.getHeaders().at("Connection") == "keep-alive");
+    CHECK(req.getHeaders().at("Content-Type") == "application/x-www-form-urlencoded");
 
     REQUIRE(req.getParameters().size() == 2);
     CHECK(req.getParameters().at("name") == "Gordon Czapiger");

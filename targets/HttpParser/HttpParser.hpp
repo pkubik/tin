@@ -35,14 +35,14 @@ public:
     Request(Request&&) = default;
 
     Method getMethod() const { return method; }
-    const std::string& getUri() const { return uri; }
+    const std::string& getResource() const { return resource; }
     const std::string& getVersion() const { return version; }
     const HeaderMap& getHeaders() const { return headers; }
     const ParameterMap& getParameters() const { return parameters; }
 
 private:
     Method method;
-    std::string uri;
+    std::string resource;
     std::string version;
 
     HeaderMap headers;

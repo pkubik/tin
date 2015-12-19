@@ -43,7 +43,7 @@ void Parser::parse() {
     }
 
     if (token->type == Token::Type::WORD) {
-        request.uri = token->as<Word>().value;
+        request.resource = token->as<Word>().value;
         token = lexer.getToken();
     } else {
         status.setError("Error parsing URI");
@@ -79,7 +79,10 @@ void Parser::parse() {
 
     while (parseHeader());
 
-    parseCRLF();
+    if (token->type != Token::Type::CRLF) {
+        status.setError("CRLF expected");
+        return;
+    }
 
     if (request.method == Request::POST) {
         auto it = request.headers.find("Content-Type");
