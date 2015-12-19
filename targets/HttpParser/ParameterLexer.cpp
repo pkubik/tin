@@ -16,7 +16,7 @@ namespace parameter {
 namespace {
 
 bool isText(char c) {
-    return c != '=' && c != '&' && c != BufferedInput::END;
+    return ::isalnum(c) || c == '-' || c == '_' || c == '+' || c == '%' || c == '*';
 }
 
 }
@@ -24,7 +24,7 @@ bool isText(char c) {
 Token Lexer::getToken() {
     const char c = source.getChar();
 
-    if (c == source.END) {
+    if (c == source.END || ::isblank(c)) {
         return Token{Token::Type::END, ""};
     }
 

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "HttpLexer.hpp"
+#include "ParameterLexer.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -26,6 +27,7 @@ public:
     };
 
     typedef std::unordered_map<std::string, std::string> HeaderMap;
+    typedef std::unordered_map<std::string, std::string> ParameterMap;
 
     Request() = default;
     Request(const Request&) = delete;
@@ -33,17 +35,18 @@ public:
     Request(Request&&) = default;
 
     Method getMethod() const { return method; }
-    const std::string& getUri() const { return uri; }
+    const std::string& getResource() const { return resource; }
     const std::string& getVersion() const { return version; }
     const HeaderMap& getHeaders() const { return headers; }
+    const ParameterMap& getParameters() const { return parameters; }
 
 private:
     Method method;
-    std::string uri;
+    std::string resource;
     std::string version;
 
     HeaderMap headers;
-    // message body is left in the buffer for another parser
+    ParameterMap parameters;
 
     friend class Parser;
 };
@@ -74,12 +77,15 @@ public:
 
 private:
     Lexer lexer;
-    Token token;
+    parameter::Lexer parameterLexer;
+    std::unique_ptr<Token> token;
+    parameter::Token paramToken;
     Request& request;
     Status& status;
 
     Parser(BufferedInput& input, Request& request, Status& status)
         : lexer(input)
+        , parameterLexer(input)
         , token(lexer.getToken())
         , request(request)
         , status(status) {}
@@ -108,6 +114,12 @@ private:
 
     /** Parses single CRLF */
     bool parseCRLF();
+
+    /** Parses uri-encoded parameters */
+    bool parseParameters();
+
+    /** Parses one uri-encoded parameter */
+    bool parseParameter();
 };
 
 }

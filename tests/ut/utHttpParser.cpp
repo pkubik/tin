@@ -13,8 +13,6 @@
 
 #include "HttpParser/BufferedInput.hpp"
 #include "HttpParser/HttpParser.hpp"
-#include "HttpParser/UriLexer.hpp"
-#include "HttpParser/ParameterLexer.hpp"
 
 using namespace parser;
 
@@ -36,27 +34,36 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
 
     std::istringstream input("GET \n"
                              "/res HTTP/1.1\r\n"
-                             "Accept: text/plain; q=0.5, text/html\r\n"
+                             "Accept: text/plain; q=0.5,\r\n"
+                             "        text/html\r\n"
                              "\r\n");
 
-    const auto tokens = {
-        Token{Token::Type::WORD, "GET"},
-        Token{Token::Type::BLANK, " "},
-        Token{Token::Type::CRLF, "\n"},
-        Token{Token::Type::WORD, "/res"},
-        Token{Token::Type::BLANK, " "},
-        Token{Token::Type::WORD, "HTTP/1.1"},
-        Token{Token::Type::CRLF, "\r\n"},
-        Token{Token::Type::WORD, "Accept"},
-        Token{Token::Type::COLON, ":"},
-        Token{Token::Type::BLANK, " "},
-        Token{Token::Type::WORD, "text/plain;"},
-        Token{Token::Type::BLANK, " "},
-        Token{Token::Type::WORD, "q=0.5,"},
-        Token{Token::Type::BLANK, " "},
-        Token{Token::Type::WORD, "text/html"},
-        Token{Token::Type::CRLF, "\r\n"},
-        Token{Token::Type::CRLF, "\r\n"},
+    const std::unique_ptr<Token> tokens[] = {
+        Keyword::create(Keyword::Id::GET),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::CRLF),
+        Word::create("/res"),
+        Token::create(Token::Type::BLANK),
+        Word::create("HTTP/1.1"),
+        Token::create(Token::Type::CRLF),
+        Word::create("Accept"),
+        Token::create(Token::Type::COLON),
+        Token::create(Token::Type::BLANK),
+        Word::create("text/plain;"),
+        Token::create(Token::Type::BLANK),
+        Word::create("q=0.5,"),
+        Token::create(Token::Type::CRLF),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Word::create("text/html"),
+        Token::create(Token::Type::CRLF),
+        Token::create(Token::Type::CRLF)
     };
 
     SourceWrapper source(input);
@@ -65,60 +72,10 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
 
     for (auto& expToken : tokens) {
         const auto& token = lexer.getToken();
-        CHECK(token.type == expToken.type);
-        CHECK(token.value == expToken.value);
-    }
-}
-
-TEST_CASE( "URI lexer scanning whole input", "[Parser::URI]" ) {
-    using namespace parser::uri;
-
-    std::istringstream input("/table/{from}-{to}/");
-
-    const auto tokens = {
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::TEXT, "table"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::VAR, "from"},
-        Token{Token::Type::TEXT, "-"},
-        Token{Token::Type::VAR, "to"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::END, ""},
-    };
-
-    SourceWrapper source(input);
-    BufferedInput bi(source, 10);
-    Lexer lexer(bi);
-
-    for (auto& expToken : tokens) {
-        const auto& token = lexer.getToken();
-        CHECK(token.type == expToken.type);
-        CHECK(token.value == expToken.value);
-    }
-}
-
-TEST_CASE( "URI lexer scanning corrupted input", "[Parser::URI]" ) {
-    using namespace parser::uri;
-
-    std::istringstream input("/table/{from}-{to/notparsed");
-
-    const auto tokens = {
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::TEXT, "table"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::VAR, "from"},
-        Token{Token::Type::TEXT, "-"},
-        Token{Token::Type::ERROR, "to/"},
-    };
-
-    SourceWrapper source(input);
-    BufferedInput bi(source, 10);
-    Lexer lexer(bi);
-
-    for (auto& expToken : tokens) {
-        const auto& token = lexer.getToken();
-        CHECK(token.type == expToken.type);
-        CHECK(token.value == expToken.value);
+        CHECK(token->type == expToken->type);
+        if (token->type == Token::Type::WORD) {
+            CHECK(token->as<Word>().value == expToken->as<Word>().value);
+        }
     }
 }
 
@@ -189,10 +146,71 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
 
     auto& req = result.first;
     CHECK(req.getMethod() == Request::GET);
-    CHECK(req.getUri() == "/resource");
+    CHECK(req.getResource() == "/resource");
     CHECK(req.getVersion() == "HTTP/1.1");
 
     REQUIRE(req.getHeaders().size() == 2);
     CHECK(req.getHeaders().at("Connection") == "keep-alive");
     CHECK(req.getHeaders().at("Multiline") == "a, b, c, d");
+}
+
+TEST_CASE( "HTTP parser parsing whole GET request with parameters.", "[Parser::HTTP]" ) {
+    using namespace parser::http;
+
+    std::istringstream input("GET "
+                             "/resource?name=Gordon+Czapiger&specials="
+                             "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1 "
+                             "HTTP/1.1  \r\n"
+                             "Connection: keep-alive\r\n"
+                             "\r\n");
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    auto result = Parser::parse(bi);
+
+    REQUIRE(result.second == true);
+
+    auto& req = result.first;
+    CHECK(req.getMethod() == Request::GET);
+    CHECK(req.getResource() == "/resource");
+    CHECK(req.getVersion() == "HTTP/1.1");
+
+    REQUIRE(req.getHeaders().size() == 1);
+    CHECK(req.getHeaders().at("Connection") == "keep-alive");
+
+    REQUIRE(req.getParameters().size() == 2);
+    CHECK(req.getParameters().at("name") == "Gordon Czapiger");
+    CHECK(req.getParameters().at("specials") == "+!@#$%^&*(){}1");
+}
+
+TEST_CASE( "HTTP parser parsing whole POST request with parameters.", "[Parser::HTTP]" ) {
+    using namespace parser::http;
+
+    std::istringstream input("POST "
+                             "/resource "
+                             "HTTP/1.1  \r\n"
+                             "Connection: keep-alive\r\n"
+                             "Content-Type: application/x-www-form-urlencoded\r\n"
+                             "\r\n"
+                             "name=Gordon+Czapiger&specials="
+                             "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1");
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    auto result = Parser::parse(bi);
+
+    REQUIRE(result.second == true);
+
+    auto& req = result.first;
+    CHECK(req.getMethod() == Request::POST);
+    CHECK(req.getResource() == "/resource");
+    CHECK(req.getVersion() == "HTTP/1.1");
+
+    REQUIRE(req.getHeaders().size() == 2);
+    CHECK(req.getHeaders().at("Connection") == "keep-alive");
+    CHECK(req.getHeaders().at("Content-Type") == "application/x-www-form-urlencoded");
+
+    REQUIRE(req.getParameters().size() == 2);
+    CHECK(req.getParameters().at("name") == "Gordon Czapiger");
+    CHECK(req.getParameters().at("specials") == "+!@#$%^&*(){}1");
 }
