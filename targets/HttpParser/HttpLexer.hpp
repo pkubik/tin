@@ -18,7 +18,7 @@ namespace parser {
 namespace http {
 
 struct Token {
-    enum Type {
+    enum class Type : uint8_t {
         KEYWORD,
         WORD,
         COLON,
@@ -39,7 +39,7 @@ struct Token {
 };
 
 struct Keyword : Token {
-    enum Id {
+    enum class Id : uint8_t {
         NONE,
         GET,
         POST,

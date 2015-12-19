@@ -18,7 +18,7 @@ namespace http {
 namespace {
 
 bool isText(const Token& token) {
-    return token.type != Token::CRLF && token.type != Token::END;
+    return token.type != Token::Type::CRLF && token.type != Token::Type::END;
 }
 
 }
@@ -42,7 +42,7 @@ void Parser::parse() {
         return;
     }
 
-    if (token->type == Token::WORD) {
+    if (token->type == Token::Type::WORD) {
         request.uri = token->as<Word>().value;
         token = lexer.getToken();
     } else {
@@ -50,11 +50,15 @@ void Parser::parse() {
         return;
     }
 
+    if (token->type == Token::Type::QMARK) {
+        // parse parameters
+    }
+
     if (!parseWhitespace()) {
         return;
     }
 
-    if (token->type == Token::WORD) {
+    if (token->type == Token::Type::WORD) {
         request.version = token->as<Word>().value;
         token = lexer.getToken();
     } else {
@@ -71,18 +75,25 @@ void Parser::parse() {
     while (parseHeader());
 
     parseCRLF();
+
+    if (request.method == Request::POST) {
+        auto it = request.headers.find("Content-Type");
+        if (it != request.headers.end() && it->second == "application/x-www-form-urlencoded") {
+            parseParameters();
+        }
+    }
 }
 
 bool Parser::parseMethod() {
     bool ret = true;
 
-    if (token->type == Token::KEYWORD) {
+    if (token->type == Token::Type::KEYWORD) {
         auto& keyword = token->as<Keyword>();
-        if (keyword.id == Keyword::GET) {
+        if (keyword.id == Keyword::Id::GET) {
             request.method = Request::GET;
-        } else if (keyword.id == Keyword::POST)  {
+        } else if (keyword.id == Keyword::Id::POST)  {
             request.method = Request::POST;
-        } else if (keyword.id == Keyword::HEAD) {
+        } else if (keyword.id == Keyword::Id::HEAD) {
             request.method = Request::HEAD;
         } else {
             status.setError("Unknown method type");
@@ -98,8 +109,8 @@ bool Parser::parseMethod() {
 }
 
 bool Parser::parseHeader() {
-    if (token->type != Token::WORD) {
-        if (token->type == Token::CRLF) {
+    if (token->type != Token::Type::WORD) {
+        if (token->type == Token::Type::CRLF) {
             // header list is empty
             return false;
         }
@@ -114,7 +125,7 @@ bool Parser::parseHeader() {
 
     skipBlanks();
 
-    if (token->type != Token::COLON) {
+    if (token->type != Token::Type::COLON) {
         status.setError("Colon between header name and value expected");
         return false;
     }
@@ -135,13 +146,17 @@ bool Parser::parseHeader() {
 bool Parser::parseHeaderValue(std::string& result) {
     for (;;) {
         while (isText(*token)) {
-            result += token->as<Word>().value;
+            if (token->type == Token::Type::WORD) {
+                result += token->as<Word>().value;
+            } else if (token->type == Token::Type::BLANK) {
+                result += ' ';
+            }
             token = lexer.getToken();
         }
 
-        if (token->type == Token::CRLF) {
+        if (token->type == Token::Type::CRLF) {
             token = lexer.getToken();
-            if (token->type == Token::BLANK) {
+            if (token->type == Token::Type::BLANK) {
                 skipBlanks();
                 result += ' ';
                 continue;
@@ -160,7 +175,7 @@ bool Parser::parseHeaderValue(std::string& result) {
 bool Parser::parseWhitespace() {
     bool ret = false;
 
-    while (token->type == Token::BLANK || token->type == Token::CRLF) {
+    while (token->type == Token::Type::BLANK || token->type == Token::Type::CRLF) {
         ret = true;
         token = lexer.getToken();
     }
@@ -173,7 +188,7 @@ bool Parser::parseWhitespace() {
 }
 
 void Parser::skipBlanks() {
-    while (token->type == Token::BLANK) {
+    while (token->type == Token::Type::BLANK) {
         token = lexer.getToken();
     }
 }
@@ -181,13 +196,17 @@ void Parser::skipBlanks() {
 bool Parser::parseCRLF() {
     bool ret = true;
 
-    if (token->type != Token::CRLF) {
+    if (token->type != Token::Type::CRLF) {
         status.setError("CRLF expected");
         ret = false;
     }
 
     token = lexer.getToken();
     return ret;
+}
+
+bool Parser::parseParameters() {
+    return true;
 }
 
 }

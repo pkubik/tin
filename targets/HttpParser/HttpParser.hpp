@@ -27,6 +27,7 @@ public:
     };
 
     typedef std::unordered_map<std::string, std::string> HeaderMap;
+    typedef std::unordered_map<std::string, std::string> ParameterMap;
 
     Request() = default;
     Request(const Request&) = delete;
@@ -37,6 +38,7 @@ public:
     const std::string& getUri() const { return uri; }
     const std::string& getVersion() const { return version; }
     const HeaderMap& getHeaders() const { return headers; }
+    const ParameterMap& getParameters() const { return parameters; }
 
 private:
     Method method;
@@ -44,7 +46,7 @@ private:
     std::string version;
 
     HeaderMap headers;
-    // message body is left in the buffer for another parser
+    ParameterMap parameters;
 
     friend class Parser;
 };
@@ -111,6 +113,9 @@ private:
 
     /** Parses single CRLF */
     bool parseCRLF();
+
+    /** Parses uri-encoded parameters */
+    bool parseParameters();
 };
 
 }

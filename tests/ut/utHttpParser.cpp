@@ -34,11 +34,12 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
 
     std::istringstream input("GET \n"
                              "/res HTTP/1.1\r\n"
-                             "Accept: text/plain; q=0.5, text/html\r\n"
+                             "Accept: text/plain; q=0.5,\r\n"
+                             "        text/html\r\n"
                              "\r\n");
 
     const std::unique_ptr<Token> tokens[] = {
-        Keyword::create(Keyword::GET),
+        Keyword::create(Keyword::Id::GET),
         Token::create(Token::Type::BLANK),
         Token::create(Token::Type::CRLF),
         Word::create("/res"),
@@ -51,6 +52,14 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
         Word::create("text/plain;"),
         Token::create(Token::Type::BLANK),
         Word::create("q=0.5,"),
+        Token::create(Token::Type::CRLF),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
+        Token::create(Token::Type::BLANK),
         Token::create(Token::Type::BLANK),
         Word::create("text/html"),
         Token::create(Token::Type::CRLF),
@@ -64,7 +73,7 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
     for (auto& expToken : tokens) {
         const auto& token = lexer.getToken();
         CHECK(token->type == expToken->type);
-        if (token->type == Token::WORD) {
+        if (token->type == Token::Type::WORD) {
             CHECK(token->as<Word>().value == expToken->as<Word>().value);
         }
     }
