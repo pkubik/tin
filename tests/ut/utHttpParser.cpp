@@ -13,8 +13,6 @@
 
 #include "HttpParser/BufferedInput.hpp"
 #include "HttpParser/HttpParser.hpp"
-#include "HttpParser/UriLexer.hpp"
-#include "HttpParser/ParameterLexer.hpp"
 
 using namespace parser;
 
@@ -61,58 +59,6 @@ TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
 
     SourceWrapper source(input);
     BufferedInput bi(source, 3);
-    Lexer lexer(bi);
-
-    for (auto& expToken : tokens) {
-        const auto& token = lexer.getToken();
-        CHECK(token.type == expToken.type);
-        CHECK(token.value == expToken.value);
-    }
-}
-
-TEST_CASE( "URI lexer scanning whole input", "[Parser::URI]" ) {
-    using namespace parser::uri;
-
-    std::istringstream input("/table/{from}-{to}/");
-
-    const auto tokens = {
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::TEXT, "table"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::VAR, "from"},
-        Token{Token::Type::TEXT, "-"},
-        Token{Token::Type::VAR, "to"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::END, ""},
-    };
-
-    SourceWrapper source(input);
-    BufferedInput bi(source, 10);
-    Lexer lexer(bi);
-
-    for (auto& expToken : tokens) {
-        const auto& token = lexer.getToken();
-        CHECK(token.type == expToken.type);
-        CHECK(token.value == expToken.value);
-    }
-}
-
-TEST_CASE( "URI lexer scanning corrupted input", "[Parser::URI]" ) {
-    using namespace parser::uri;
-
-    std::istringstream input("/table/{from}-{to/notparsed");
-
-    const auto tokens = {
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::TEXT, "table"},
-        Token{Token::Type::SLASH, "/"},
-        Token{Token::Type::VAR, "from"},
-        Token{Token::Type::TEXT, "-"},
-        Token{Token::Type::ERROR, "to/"},
-    };
-
-    SourceWrapper source(input);
-    BufferedInput bi(source, 10);
     Lexer lexer(bi);
 
     for (auto& expToken : tokens) {

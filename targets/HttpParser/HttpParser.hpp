@@ -10,6 +10,7 @@
 #pragma once
 
 #include "HttpLexer.hpp"
+#include "ParameterLexer.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -74,12 +75,14 @@ public:
 
 private:
     Lexer lexer;
+    parameter::Lexer parameterLexer;
     Token token;
     Request& request;
     Status& status;
 
     Parser(BufferedInput& input, Request& request, Status& status)
         : lexer(input)
+        , parameterLexer(input)
         , token(lexer.getToken())
         , request(request)
         , status(status) {}
