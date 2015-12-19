@@ -153,3 +153,32 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
     CHECK(req.getHeaders().at("Connection") == "keep-alive");
     CHECK(req.getHeaders().at("Multiline") == "a, b, c, d");
 }
+
+TEST_CASE( "HTTP parser parsing whole GET request with parameters.", "[Parser::HTTP]" ) {
+    using namespace parser::http;
+
+    std::istringstream input("GET "
+                             "/resource?name=Gordon+Czapiger&specials="
+                             "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1 "
+                             "HTTP/1.1  \r\n"
+                             "Connection: keep-alive\r\n"
+                             "\r\n");
+
+    SourceWrapper source(input);
+    BufferedInput bi(source, 10);
+    auto result = Parser::parse(bi);
+
+    REQUIRE(result.second == true);
+
+    auto& req = result.first;
+    CHECK(req.getMethod() == Request::GET);
+    CHECK(req.getUri() == "/resource");
+    CHECK(req.getVersion() == "HTTP/1.1");
+
+    REQUIRE(req.getHeaders().size() == 1);
+    CHECK(req.getHeaders().at("Connection") == "keep-alive");
+
+    REQUIRE(req.getParameters().size() == 2);
+    CHECK(req.getParameters().at("name") == "Gordon Czapiger");
+    CHECK(req.getParameters().at("specials") == "+!@#$%^&*(){}1");
+}

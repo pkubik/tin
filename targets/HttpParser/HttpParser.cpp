@@ -51,11 +51,16 @@ void Parser::parse() {
     }
 
     if (token->type == Token::Type::QMARK) {
-        // parse parameters
-    }
+        if (!parseParameters()) {
+            return;
+        }
 
-    if (!parseWhitespace()) {
-        return;
+        token = lexer.getToken();
+        skipBlanks();
+    } else {
+        if (!parseWhitespace()) {
+            return;
+        }
     }
 
     if (token->type == Token::Type::WORD) {
@@ -206,6 +211,45 @@ bool Parser::parseCRLF() {
 }
 
 bool Parser::parseParameters() {
+    while (parseParameter()) {
+        paramToken = parameterLexer.getToken();
+        if (paramToken.type != parameter::Token::Type::AND) {
+            if (paramToken.type == parameter::Token::Type::ERROR) {
+                status.setError("Error while parsing parameters");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    status.setError("Error while parsing parameters");
+    return false;
+}
+
+bool Parser::parseParameter() {
+    paramToken = parameterLexer.getToken();
+
+    if (paramToken.type == parameter::Token::Type::TEXT) {
+        auto it = request.parameters.emplace(paramToken.value, "");
+
+        paramToken = parameterLexer.getToken();
+
+        if (paramToken.type == parameter::Token::Type::EQUAL) {
+            paramToken = parameterLexer.getToken();
+
+            if (paramToken.type == parameter::Token::Type::TEXT) {
+                it.first->second = paramToken.value;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
     return true;
 }
 

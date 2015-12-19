@@ -16,7 +16,10 @@ namespace http {
 namespace {
 
 bool isOther(char c) {
-    return c != ':' && !::isspace(static_cast<int>(c)) && c != BufferedInput::END;
+    return c != ':'
+        && !::isspace(static_cast<int>(c))
+        && c != '?'
+        && c != BufferedInput::END;
 }
 
 Keyword::Id getKeywordId(const std::string& buffer) {

@@ -79,6 +79,7 @@ private:
     Lexer lexer;
     parameter::Lexer parameterLexer;
     std::unique_ptr<Token> token;
+    parameter::Token paramToken;
     Request& request;
     Status& status;
 
@@ -116,6 +117,9 @@ private:
 
     /** Parses uri-encoded parameters */
     bool parseParameters();
+
+    /** Parses one uri-encoded parameter */
+    bool parseParameter();
 };
 
 }
