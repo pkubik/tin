@@ -29,6 +29,25 @@ public:
     }
 };
 
+TEST_CASE( "Buffered input limit", "[Parser::BufferedInput]" ) {
+    std::istringstream input("0123456789");
+    SourceWrapper source(input);
+    BufferedInput bi(source, 3);
+
+    CHECK(bi.peekChar() == '0');
+    CHECK(bi.getChar() == '0');
+
+    bi.setLimit(3);
+    CHECK(bi.getChar() == '1');
+    CHECK(bi.getChar() == '2');
+    CHECK(bi.getChar() == '3');
+
+    const char END = BufferedInput::END;
+    CHECK(bi.getChar() == END);
+    CHECK(bi.peekChar() == END);
+    CHECK(bi.getChar() == END);
+}
+
 TEST_CASE( "HTTP lexer scanning whole input", "[Parser::HTTP]" ) {
     using namespace parser::http;
 

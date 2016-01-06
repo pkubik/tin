@@ -11,6 +11,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <limits>
 
 namespace parser {
 
@@ -27,6 +28,10 @@ private:
     SourceReader& source;
     std::vector<char> buffer;
 
+    /** back buffer to allow peeking */
+    char backBuffer = 0;
+    bool useBackBuffer = false;
+
     /** index of a last available character + 1, 0 for EOF */
     size_t end = 0;
     /** index of the current character inside buffer */
@@ -36,30 +41,60 @@ private:
     /** current column of input assuming unix endl */
     size_t column = 1;
 
-    void moveCursor() {
+    /** limit of characters to read */
+    static const size_t LIMIT_INACTIVE = std::numeric_limits<size_t>::max();
+    size_t limit = LIMIT_INACTIVE;
+
+    void incCursor() {
+        if (limit != LIMIT_INACTIVE) {
+            --limit;
+            if (limit == 0) {
+                end = 0;
+            }
+        }
+
         ++cursor;
 
         if (cursor >= end) {
             cursor = 0;
             end = source.read(buffer.data(), buffer.size());
-
-            if (end == 0) {
-                buffer[0] = END;
-            }
         }
     }
 
-public:
-    BufferedInput(SourceReader& source, size_t bufferLength)
-        : source(source)
-        , buffer(bufferLength) {
-
-        end = source.read(buffer.data(), bufferLength);
+    /** can be done only once until next incCursor */
+    void decCursor() {
+        if (cursor == 0) {
+            backBuffer = buffer[cursor];
+            useBackBuffer = true;
+        } else {
+            --cursor;
+        }
     }
 
+    void putBack() {
+        decCursor();
+    }
+
+public:
     static const char END = 0;
 
+    BufferedInput(SourceReader& source, size_t bufferLength)
+        : source(source)
+        , buffer(bufferLength)
+    {}
+
     char getChar() {
+        if (limit == 0) {
+            return END;
+        }
+
+        if (useBackBuffer) {
+            useBackBuffer = false;
+            return backBuffer;
+        }
+
+        incCursor();
+
         char c = buffer[cursor];
 
         ++column;
@@ -68,12 +103,13 @@ public:
             column = 1;
         }
 
-        moveCursor();
         return c;
     }
 
-    char peekChar() const {
-        return buffer[cursor];
+    char peekChar() {
+        char c = getChar();
+        putBack();
+        return c;
     }
 
     size_t getLine() const {
@@ -82,6 +118,10 @@ public:
 
     size_t getColumn() const {
         return column;
+    }
+
+    void setLimit(size_t newLimit) {
+        limit = newLimit;
     }
 
     operator bool () const {
