@@ -9,53 +9,62 @@
 
 #include "catch/catch.hpp"
 
-#include <thread>
-
 #include "Network/Socket.hpp"
 #include "Network/Exception.hpp"
 
-TEST_CASE( "Socket init and close", "[Network::Socket]" ) {
-    network::Socket socket;
-    REQUIRE(socket.isClosed());
+#include <thread>
 
-    socket.bind("localhost", "0", network::Socket::TCP);
-    REQUIRE(!socket.isClosed());
+using namespace network;
 
-    socket.close();
-    REQUIRE(socket.isClosed());
+namespace {
+
+const std::string SOCKET_PATH = "/tmp/test.socket";
+
 }
 
-TEST_CASE( "Unknown address", "[Network::Socket]" ) {
-    network::Socket socket;
+TEST_CASE( "Get socket type", "[Network::Socket]" ) {
+    {
+        Socket socket;
+        CHECK(socket.getType() == Socket::Type::INVALID);
+    }
 
-    REQUIRE_THROWS(socket.bind(".*/definitely_unknown=address", "and0port", network::Socket::TCP));
+    {
+        Socket socket = Socket::createINET("localhost", "");
+        CHECK(socket.getType() == Socket::Type::INET);
+    }
 
-    REQUIRE(socket.isClosed());
+    {
+        Socket socket = Socket::createUNIX(SOCKET_PATH);
+        CHECK(socket.getType() == Socket::Type::UNIX);
+    }
 }
 
-TEST_CASE( "Socket listen error", "[Network::Socket]" ) {
-    network::Socket socket;
+TEST_CASE( "Internet socket communication", "[Network::Socket]" ) {
+    const char msg[] = "MESSAGE";
+    const std::string host = "127.0.0.1";
 
-    REQUIRE_THROWS(socket.listen(0));
-}
+    Socket server = Socket::createINET(host, "");
+    const unsigned short port = server.getPort();
 
-TEST_CASE( "Socket send and recv", "[Network::Socket]" ) {
-    network::Socket server;
-    server.bind("localhost", "0", network::Socket::TCPv4);
-    auto address = server.getAddress();
-    server.listen(10);
+    CHECK(server.getType() == Socket::Type::INET);
 
     auto clientThread = std::thread([&] {
-        network::Socket client;
-        client.connect("localhost", std::to_string(address.getPort()), network::Socket::TCP);
-        client.send("ABC");
-        REQUIRE(client.recv() == "XYZ");
+        Socket client = Socket::connectINET(host, std::to_string(port));
+        CHECK(client.getType() == Socket::Type::INET);
+        client.write(msg, sizeof(msg));
+
+        char buffer[sizeof(msg) + 1];
+        client.read(buffer, sizeof(msg));
+        CHECK(std::string(buffer) == std::string(msg));
     });
 
-    network::Socket::Address addr;
-    auto connection = server.accept(addr);
-    REQUIRE(connection.recv() == "ABC");
-    connection.send("XYZ");
+    auto connection = server.accept();
+    char buffer[sizeof(msg)];
+
+    connection->read(buffer, sizeof(msg));
+    CHECK(std::string(buffer) == std::string(msg));
+
+    connection->write(msg, sizeof(msg));
 
     clientThread.join();
 }

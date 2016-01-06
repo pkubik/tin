@@ -1,56 +1,124 @@
 /*
  * TIN 2015
  *
- * Krystian Czapiga
- * Robert Kluz
  * Pawel Kubik
- * Patryk Szypulski
  */
 
 #pragma once
 
-#include <array>
-#include <netinet/in.h>
+#include <string>
+#include <memory>
 #include <netdb.h>
 
 namespace network {
 
+/**
+ * This class wraps all operations possible to do with a socket.
+ *
+ * It has operations both for client and server application.
+ */
 class Socket {
 public:
-    struct Address {
-        sockaddr_storage internal = {};
-        socklen_t length = sizeof(sockaddr_storage);
-
-        std::pair<std::string, std::string> getNames() const;
-        unsigned short getPort() const;
+    enum class Type : int8_t {
+        INVALID,
+        UNIX,
+        INET
     };
 
-    struct Details {
-        int family;
-        int type;
-        int protocol;
-    };
+    /**
+     * Default constructor.
+     * If socketFD is passed then it's passed by the Socket
+     *
+     * @param socketFD socket obtained outside the class.
+     */
+    explicit Socket(int socketFD = -1);
+    Socket(Socket&& socket) noexcept;
+    ~Socket() noexcept;
 
-    static constexpr Details TCP{AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP};
-    static constexpr Details TCPv4{AF_INET, SOCK_STREAM, IPPROTO_TCP};
-    static constexpr Details TCPv6{AF_INET6, SOCK_STREAM, IPPROTO_TCP};
+    Socket(const Socket&) = delete;
+    Socket& operator=(const Socket&) = delete;
+    Socket& operator=(Socket&&) = delete;
 
-    Socket() = default;
-    void bind(addrinfo* addressInfo);
-    void bind(const std::string& name, const std::string& port, const Details& details = TCP);
-    void listen(int limit);
-    void connect(const std::string& name, const std::string& port, const Details& details = TCP);
-    Socket accept();
-    Socket accept(Address& address);
-    void send(const std::string& message, int flags = 0);
-    std::string recv(int flags = 0);
-    void close();
-    bool isClosed() const;
-    Address getAddress() const;
-    operator int () const;
+    /**
+     * @return reference to the socket's file descriptor
+     */
+    int getFD() const;
+
+    /**
+     * Write data using the file descriptor
+     *
+     * @param bufferPtr buffer with the data
+     * @param size size of the buffer
+     */
+    void write(const void* bufferPtr, const size_t size) const;
+
+    /**
+     * Reads a value of the given type.
+     *
+     * @param bufferPtr buffer with the data
+     * @param size size of the buffer
+     */
+    void read(void* bufferPtr, const size_t size) const;
+
+    /**
+     * Accepts connection. Used by a server application.
+     * Blocking, called by a server.
+     */
+    std::shared_ptr<Socket> accept();
+
+    /**
+     * Returns the socket type based on it's domain.
+     */
+    Type getType() const;
+
+    /**
+     * Returns a port associated with the socket.
+     */
+    unsigned short getPort() const;
+
+    /**
+     * Prepares UNIX socket for accepting connections.
+     * Called by a server.
+     *
+     * @param path path to the socket
+     * @return created socket
+     */
+    static Socket createUNIX(const std::string& path);
+
+    /**
+     * Prepares INET socket for accepting connections.
+     * Called by a server.
+     *
+     * @param host hostname or ip address
+     * @param service port number or service name
+     * @return created socket
+     */
+    static Socket createINET(const std::string& host, const std::string& service);
+
+    /**
+     * Connects to an UNIX socket. Called as a client.
+     *
+     * @param path path to the socket
+     * @return connected socket
+     */
+    static Socket connectUNIX(const std::string& path, const int timeoutMs = 1000);
+
+    /**
+     * Connects to an INET socket. Called as a client.
+     *
+     * @param host hostname or ip address
+     * @param service port number or service name
+     * @return connected socket
+     */
+    static Socket connectINET(const std::string& host,
+                              const std::string& service,
+                              const int timeoutMs = 1000);
 
 private:
-    int descriptor = -1;
+    int mFD;
+
+    static int createSocketInternal(const std::string& path);
+    static int getSystemdSocketInternal(const std::string& path);
 };
 
 }

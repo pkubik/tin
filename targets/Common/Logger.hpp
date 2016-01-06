@@ -22,7 +22,7 @@ enum LogLevel
 
 namespace {
 
-constexpr char* LOG_LEVEL_STRINGS[] =
+const char* LOG_LEVEL_STRINGS[] =
 {
     "TRACE",
     "DEBUG",
@@ -32,7 +32,7 @@ constexpr char* LOG_LEVEL_STRINGS[] =
     "HELP"
 };
 
-constexpr const char* toString(LogLevel severity)
+const char* toString(LogLevel severity)
 {
     return LOG_LEVEL_STRINGS[severity];
 }
@@ -69,21 +69,27 @@ public:
         logger().stream = &stream;
     }
 
+    template <typename T>
     static void log(LogLevel level,
-                    const std::string& message,
+                    T&& printingFunction,
                     const char*, unsigned line,
                     const char* function)
     {
         if (logger().minLevel <= level)
         {
             *logger().stream << "[" << toString(level) << "]\t"
-                << function << ':' << line
-                << "\t-:  " << message << std::endl;
+                << function << ':' << line << "\t-:  ";
+
+            printingFunction(*logger().stream);
+
+            *logger().stream  << std::endl;
         }
     }
 };
 
-#define LOG(LEVEL, MESSAGE) do { Logger::log(LEVEL, MESSAGE, __FILE__, __LINE__, __func__); } while (0,0)
+#define LOG(LEVEL, MESSAGE) do { Logger::log(LEVEL, \
+    [&](std::ostream& s) { s << MESSAGE; } \
+    , __FILE__, __LINE__, __func__); } while (0,0)
 
 #define LOGE(MESSAGE) LOG(ERROR_LEVEL, MESSAGE)
 #define LOGW(MESSAGE) LOG(WARN_LEVEL, MESSAGE)
