@@ -61,10 +61,10 @@ TEST_CASE( "Internet socket communication", "[Network::Socket]" ) {
     auto connection = server.accept();
     char buffer[sizeof(msg)];
 
-    connection->read(buffer, sizeof(msg));
+    connection.read(buffer, sizeof(msg));
     CHECK(std::string(buffer) == std::string(msg));
 
-    connection->write(msg, sizeof(msg));
+    connection.write(msg, sizeof(msg));
 
     clientThread.join();
 }
