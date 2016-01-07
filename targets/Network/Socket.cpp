@@ -188,7 +188,7 @@ int Socket::getFD() const
     return mFD;
 }
 
-std::shared_ptr<Socket> Socket::accept()
+Socket Socket::accept()
 {
     int sockfd = ::accept(mFD, nullptr, nullptr);
     if (sockfd == -1) {
@@ -197,7 +197,7 @@ std::shared_ptr<Socket> Socket::accept()
         throw NetworkException(msg);
     }
     setFdOptions(sockfd);
-    return std::make_shared<Socket>(sockfd);
+    return Socket(sockfd);
 }
 
 Socket::Type Socket::getType() const
@@ -252,6 +252,30 @@ void Socket::write(const void* bufferPtr, const size_t size) const
 void Socket::read(void* bufferPtr, const size_t size) const
 {
     utils::read(mFD, bufferPtr, size);
+}
+
+size_t Socket::send(const void* bufferPtr, const size_t size) const
+{
+    int ret = ::send(mFD, bufferPtr, size, 0);
+    if (ret == -1) {
+        const std::string msg = "Socket send error: " + getErrorMessage();
+        LOGE(msg);
+        throw NetworkException(msg);
+    }
+
+    return ret;
+}
+
+size_t Socket::receive(void* bufferPtr, const size_t size) const
+{
+    int ret = ::recv(mFD, bufferPtr, size, 0);
+    if (ret == -1) {
+        const std::string msg = "Socket receive error: " + getErrorMessage();
+        LOGE(msg);
+        throw NetworkException(msg);
+    }
+
+    return ret;
 }
 
 int Socket::createSocketInternal(const std::string& path)

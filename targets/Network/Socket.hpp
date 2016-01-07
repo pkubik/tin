@@ -7,7 +7,6 @@
 #pragma once
 
 #include <string>
-#include <memory>
 #include <netdb.h>
 
 namespace network {
@@ -61,10 +60,26 @@ public:
     void read(void* bufferPtr, const size_t size) const;
 
     /**
+     * Send data using the file descriptor
+     *
+     * @param bufferPtr buffer with the data
+     * @param size size of the buffer
+     */
+    size_t send(const void* bufferPtr, const size_t size) const;
+
+    /**
+     * Receive data from the file descriptor.
+     *
+     * @param bufferPtr buffer with the data
+     * @param size size of the buffer
+     */
+    size_t receive(void* bufferPtr, const size_t size) const;
+
+    /**
      * Accepts connection. Used by a server application.
      * Blocking, called by a server.
      */
-    std::shared_ptr<Socket> accept();
+    Socket accept();
 
     /**
      * Returns the socket type based on it's domain.
