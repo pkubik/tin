@@ -80,7 +80,8 @@ private:
 
         response.code = 200;
 
-        fillSimpleResponse(response, request, request.getResource());
+        constexpr char echo[] = "/echo/";
+        fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
 
         return response;
     }

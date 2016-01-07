@@ -19,10 +19,10 @@ namespace {
 
 class SourceWrapper : public SourceReader {
 private:
-    Socket socket;
+    Socket& socket;
 
 public:
-    SourceWrapper(Socket&& socket) : socket(std::move(socket)) {}
+    SourceWrapper(Socket& socket) : socket(socket) {}
 
     virtual int read(char* buffer, size_t length) {
         return socket.receive(buffer, length);
@@ -42,17 +42,19 @@ void Server::start() {
 void Server::handle(Socket&& connection) {
     // this function should be called from worker thread
 
-    SourceWrapper source(std::move(connection));
+    SourceWrapper source(connection);
     BufferedInput input(source, 100);
     auto result = http::Parser::parse(input);
     if (!result.second) {
         LOGW("Received invalid request.");
         const auto& response = handler.handleError();
-        // generate response
+        const auto& responseText = http::Generator::generate(response);
+        connection.write(responseText.c_str(), responseText.length());
     } else {
         LOGT("Handling request...");
         const auto& response = handler.handle(result.first);
-        // generate response
+        const auto& responseText = http::Generator::generate(response);
+        connection.write(responseText.c_str(), responseText.length());
     }
 }
 
