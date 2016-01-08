@@ -32,11 +32,11 @@ public:
      */
     explicit Socket(int socketFD = -1);
     Socket(Socket&& socket) noexcept;
+    Socket& operator=(Socket&& socket);
     ~Socket() noexcept;
 
     Socket(const Socket&) = delete;
     Socket& operator=(const Socket&) = delete;
-    Socket& operator=(Socket&&) = delete;
 
     /**
      * @return reference to the socket's file descriptor
@@ -80,6 +80,11 @@ public:
      * Blocking, called by a server.
      */
     Socket accept();
+
+    /**
+     * Closes socket descriptor.
+     */
+    void close();
 
     /**
      * Returns the socket type based on it's domain.

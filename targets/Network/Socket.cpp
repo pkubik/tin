@@ -174,13 +174,18 @@ Socket::Socket(Socket&& socket) noexcept
     socket.mFD = -1;
 }
 
+Socket& Socket::operator=(Socket&& socket)
+{
+    close();
+    mFD = socket.mFD;
+    socket.mFD = -1;
+
+    return *this;
+}
+
 Socket::~Socket() noexcept
 {
-    try {
-        utils::close(mFD);
-    } catch (std::exception& e) {
-        LOGE("Error in Socket's destructor: " << e.what());
-    }
+    close();
 }
 
 int Socket::getFD() const
@@ -198,6 +203,17 @@ Socket Socket::accept()
     }
     setFdOptions(sockfd);
     return Socket(sockfd);
+}
+
+void Socket::close()
+{
+    try {
+        utils::close(mFD);
+    } catch (std::exception& e) {
+        LOGE("Error in Socket's destructor: " << e.what());
+    }
+
+    mFD = -1;
 }
 
 Socket::Type Socket::getType() const

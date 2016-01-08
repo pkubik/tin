@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(Tin)
-SET(PROJECT_AUTHOR "Pawel Kubik")
+set(PROJECT_AUTHOR "Pawel Kubik")
 
 # Path for additional modules
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
@@ -25,8 +25,8 @@ option(BUILD_TESTS "build tests" ON)
 
 # Subdirectories
 #
-SET(TARGETS_DIR ${PROJECT_SOURCE_DIR}/targets)
-SET(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
+set(TARGETS_DIR ${PROJECT_SOURCE_DIR}/targets)
+set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
 
 # Set up general include directories
 #
@@ -49,11 +49,12 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
     if (CMAKE_BUILD_TYPE STREQUAL DEBUG)
-        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -O0 -ggdb")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -pthread -pedantic -O0 -ggdb")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -pthread -pedantic -O0 -ggdb")
+    else ()
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
     endif (CMAKE_BUILD_TYPE STREQUAL DEBUG)
 elseif (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /FORCE:MULTIPLE")
