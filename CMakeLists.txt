@@ -49,8 +49,8 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -lpthread -pedantic -O2 -DNDEBUG")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -lpthread -pedantic -O2 -DNDEBUG")
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -Wextra -pthread -pedantic -O2 -DNDEBUG")
     if (CMAKE_BUILD_TYPE STREQUAL DEBUG)
         set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -O0 -ggdb")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ggdb")

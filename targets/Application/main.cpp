@@ -21,8 +21,12 @@ using namespace server;
  */
 class EchoHandler : public Handler {
 public:
-    virtual Response handle(const Request& request) {
+    virtual Response handle(const Request& request, RequestError error) {
         LOGT("Echo handler handles request...");
+
+        if (error != RequestError::NONE) {
+            return handleRequestError();
+        }
 
         if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
             return handleGeneralError(request);
@@ -34,10 +38,6 @@ public:
         }
 
         return handleSuccess(request);
-    }
-
-    virtual Response handleError() {
-        return handleRequestError();
     }
 
 private:

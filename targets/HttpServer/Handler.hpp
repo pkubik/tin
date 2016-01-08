@@ -17,10 +17,15 @@ namespace server {
 typedef parser::http::Request Request;
 typedef parser::http::Response Response;
 
+enum class RequestError {
+    NONE,
+    PARSE,
+    TIMEOUT
+};
+
 class Handler {
 public:
-    virtual Response handle(const Request&) = 0;
-    virtual Response handleError() = 0;
+    virtual Response handle(const Request&, RequestError = RequestError::NONE) = 0;
 };
 
 }
