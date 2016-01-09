@@ -137,12 +137,5 @@ int main()
     Server server(handler, 7777);
     server.start();
 
-    LOGT("trace");
-    LOGD("debug");
-    LOGI("info");
-    LOGW("warning");
-    LOGE("error");
-    LOGH("help");
-
     return 0;
 }

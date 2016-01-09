@@ -51,6 +51,7 @@ bool waitForWork(int pipeEnd, unsigned timeout = -1) {
     if (ret == 1 && pfd.revents & POLLIN) {
         char buffer;
         if (::read(pipeEnd, &buffer, 1) == 1 && buffer == '1') {
+            LOGD("Worker received a new task.");
             return true;
         }
     }
@@ -69,7 +70,7 @@ Worker::Worker(WorkerPool &pool)
 }
 
 void Worker::start() {
-    thread = std::thread([&]() {
+    thread = std::thread([this]() {
         work();
     });
 }
@@ -111,17 +112,19 @@ void Worker::handle() {
 
 Worker::~Worker() {
     stop();
+    LOGD("Waiting for a worker thread to exit...");
     thread.join();
+    LOGD("Worker thread exited.");
     ::close(pipe[0]);
     ::close(pipe[1]);
 }
 
 void WorkerPool::stop() {
-    std::lock_guard<std::mutex> lock(mutex);
-
     for (Worker& worker : workers) {
         worker.stop();
     }
+
+    workers.clear();
 }
 
 void WorkerPool::reuse(Worker* worker) {

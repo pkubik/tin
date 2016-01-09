@@ -22,18 +22,19 @@ public:
     static const unsigned short DEFAULT_PORT = 80;
 
     /*
-     * @port              port used by server
+     * @port port used by server
      */
-    Server(Handler& handler, unsigned short port = DEFAULT_PORT)
-        : pool(handler)
-        , port(port)
-    {}
+    Server(Handler& handler, unsigned short port = DEFAULT_PORT);
 
     void start();
+    void stop();
 
 private:
     WorkerPool pool;
     short unsigned port = DEFAULT_PORT;
+    int pipe[2];
+
+    void registerSignalHandlers();
 };
 
 }

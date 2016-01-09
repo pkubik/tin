@@ -58,6 +58,10 @@ private:
         if (cursor >= end) {
             cursor = 0;
             end = source.read(buffer.data(), buffer.size());
+
+            if (end == 0) {
+                limit = 0;
+            }
         }
     }
 
