@@ -31,16 +31,6 @@ const int MAX_QUEUE_LENGTH = 1000;
 const int RETRY_CONNECT_STEP_MS = 10;
 const int UNIX_SOCKET_PROTOCOL = 0;
 
-void setFdOptions(const int fd)
-{
-    // Prevent from inheriting fd by zones
-    if (-1 == ::fcntl(fd, F_SETFD, FD_CLOEXEC)) {
-        const std::string msg = "Error in fcntl: " + getErrorMessage();
-        LOGE(msg);
-        throw NetworkException(msg);
-    }
-}
-
 std::unique_ptr<::addrinfo, void(*)(::addrinfo*)> getAddressInfo(const std::string& host,
                                                                  const std::string& port)
 {
@@ -67,8 +57,6 @@ void connect(const int socket,
     auto deadline = std::chrono::steady_clock::now() +
                     std::chrono::milliseconds(timeoutMS);
 
-    // There's a race between connect() in one peer and listen() in the other.
-    // We'll retry connect if no one is listening.
     do {
         if (-1 != ::connect(socket,
                             address,
@@ -104,7 +92,6 @@ int getSocketFd(const int family, const int type, const int protocol)
         LOGE(msg);
         throw SocketException(msg, errno);
     }
-    setFdOptions(fd);
 
     return fd;
 }
@@ -117,17 +104,7 @@ int getConnectedFd(const int family,
                    const int timeoutMs)
 {
     int fd = getSocketFd(family, type, protocol);
-
     connect(fd, address, addressLength, timeoutMs);
-
-    // Nonblocking socket
-    int flags = ::fcntl(fd, F_GETFL, 0);
-    if (-1 == ::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
-        utils::close(fd);
-        const std::string msg = "Error in fcntl: " + getErrorMessage();
-        LOGE(msg);
-        throw NetworkException(msg);
-    }
 
     return fd;
 }
@@ -201,7 +178,6 @@ Socket Socket::accept()
         LOGE(msg);
         throw NetworkException(msg);
     }
-    setFdOptions(sockfd);
     return Socket(sockfd);
 }
 

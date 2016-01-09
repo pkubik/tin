@@ -28,11 +28,13 @@ public:
 
     void start();
     void stop();
+    unsigned short getPort() const { return port; }
 
 private:
     WorkerPool pool;
-    short unsigned port = DEFAULT_PORT;
+    unsigned short port = DEFAULT_PORT;
     int pipe[2];
+    network::Socket socket;
 
     void registerSignalHandlers();
 };

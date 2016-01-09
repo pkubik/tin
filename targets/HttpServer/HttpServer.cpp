@@ -55,11 +55,11 @@ Server::Server(Handler& handler, unsigned short port)
     if (::pipe(pipe) == -1) {
         throw ServerException("Failed to create server's pipe.");
     }
+    socket = Socket::createINET("localhost", std::to_string(port));
+    this->port = socket.getPort();
 }
 
 void Server::start() {
-    Socket socket = Socket::createINET("localhost", std::to_string(port));
-
     while (waitForConnection(socket, pipe[0])) {
         pool.execute(socket.accept());
     }

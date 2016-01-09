@@ -147,7 +147,7 @@ TEST_CASE( "Parameter lexer scanning corrupted input", "[Parser::Parameter]" ) {
     }
 }
 
-TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
+TEST_CASE( "HTTP parser parsing whole GET request", "[Parser::HTTP]" ) {
     using namespace parser::http;
 
     std::istringstream input("GET\n"
@@ -173,7 +173,7 @@ TEST_CASE( "HTTP parser parsing whole GET request.", "[Parser::HTTP]" ) {
     CHECK(req.getHeaders().at("Multiline") == "a, b, c, d");
 }
 
-TEST_CASE( "HTTP parser parsing whole GET request with parameters.", "[Parser::HTTP]" ) {
+TEST_CASE( "HTTP parser parsing whole GET request with parameters", "[Parser::HTTP]" ) {
     using namespace parser::http;
 
     std::istringstream input("GET "
@@ -202,7 +202,7 @@ TEST_CASE( "HTTP parser parsing whole GET request with parameters.", "[Parser::H
     CHECK(req.getParameters().at("specials") == "+!@#$%^&*(){}1");
 }
 
-TEST_CASE( "HTTP parser parsing whole POST request with parameters.", "[Parser::HTTP]" ) {
+TEST_CASE( "HTTP parser parsing whole POST request with parameters", "[Parser::HTTP]" ) {
     using namespace parser::http;
 
     std::istringstream input("POST "
