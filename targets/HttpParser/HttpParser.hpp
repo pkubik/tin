@@ -76,6 +76,7 @@ public:
     static Result parse(BufferedInput& input);
 
 private:
+    BufferedInput& input;
     Lexer lexer;
     parameter::Lexer parameterLexer;
     std::unique_ptr<Token> token;
@@ -84,7 +85,8 @@ private:
     Status& status;
 
     Parser(BufferedInput& input, Request& request, Status& status)
-        : lexer(input)
+        : input(input)
+        , lexer(input)
         , parameterLexer(input)
         , token(lexer.getToken())
         , request(request)

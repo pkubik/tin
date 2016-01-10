@@ -49,9 +49,6 @@ private:
     void incCursor() {
         if (limit != LIMIT_INACTIVE) {
             --limit;
-            if (limit == 0) {
-                end = 0;
-            }
         }
 
         ++cursor;
@@ -74,6 +71,9 @@ private:
             useBackBuffer = true;
         } else {
             --cursor;
+            if (limit != LIMIT_INACTIVE && limit != 0) {
+                ++limit;
+            }
         }
     }
 

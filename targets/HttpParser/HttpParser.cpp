@@ -87,6 +87,18 @@ void Parser::parse() {
     if (request.method == Request::POST) {
         auto it = request.headers.find("Content-Type");
         if (it != request.headers.end() && it->second == "application/x-www-form-urlencoded") {
+            it = request.headers.find("Content-Length");
+            if (it != request.headers.end()) {
+                try {
+                    auto length = std::stoul(it->second, nullptr);
+                    input.setLimit(length);
+                } catch (std::invalid_argument& e) {
+                    status.setError("Invalid value as Conent-Lenght");
+                }
+            } else {
+                input.setLimit(0);
+            }
+
             parseParameters();
         }
     }

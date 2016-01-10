@@ -166,6 +166,50 @@ TEST_CASE( "Server handle simple request", "[Server]" ) {
 
         char buffer[sizeof(responseText)];
         client.receive(buffer, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        CHECK(std::string(buffer) == std::string(responseText));
+
+        // may cause data races - only for testing
+        server.stop();
+    });
+
+    server.start();
+    clientThread.join();
+}
+
+TEST_CASE( "Server handle POST request", "[Server]" ) {
+    using namespace network;
+
+    const char requestText[] = "POST /echo/ABC HTTP/1.1\r\n"
+                               "Host: 127.0.0.1:7777\r\n"
+                               "Content-Type: application/x-www-form-urlencoded\r\n"
+                               "Content-Length: 68\r\n"
+                               "Accept: text/html\r\n"
+                               "\r\n"
+                               "name=Gordon+Czapiger&specials="
+                               "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1";
+
+    // POST request isn't implemented in ECHO example
+    const char responseText[] = "400 HTTP/1.1\r\n"
+                                "Content-Type : text/plain\r\n"
+                                "Content-Length : 16\r\n"
+                                "\r\n"
+                                "Invalid request.";
+
+    EchoHandler handler;
+    Server server(handler, 0);
+    const auto port = server.getPort();
+
+    auto clientThread = std::thread([&] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        Socket client = Socket::connectINET("localhost", std::to_string(port));
+        client.write(requestText, sizeof(requestText));
+
+        char buffer[sizeof(responseText)];
+        client.receive(buffer, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
 
         CHECK(std::string(buffer) == std::string(responseText));
 

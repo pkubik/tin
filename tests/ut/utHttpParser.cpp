@@ -25,12 +25,15 @@ public:
 
     virtual int read(char* buffer, size_t length) {
         source.read(buffer, length);
+        if (source.gcount() == 0) {
+            throw std::runtime_error("Socket would block");
+        }
         return source.gcount();
     }
 };
 
 TEST_CASE( "Buffered input limit", "[Parser::BufferedInput]" ) {
-    std::istringstream input("0123456789");
+    std::istringstream input("0123");
     SourceWrapper source(input);
     BufferedInput bi(source, 3);
 
@@ -38,6 +41,7 @@ TEST_CASE( "Buffered input limit", "[Parser::BufferedInput]" ) {
     CHECK(bi.getChar() == '0');
 
     bi.setLimit(3);
+    CHECK(bi.peekChar() == '1');
     CHECK(bi.getChar() == '1');
     CHECK(bi.getChar() == '2');
     CHECK(bi.getChar() == '3');
@@ -118,6 +122,8 @@ TEST_CASE( "Parameter lexer scanning whole input", "[Parser::Parameter]" ) {
     BufferedInput bi(source, 10);
     Lexer lexer(bi);
 
+    bi.setLimit(input.str().size());
+
     for (auto& expToken : tokens) {
         const auto& token = lexer.getToken();
         CHECK(token.type == expToken.type);
@@ -139,6 +145,8 @@ TEST_CASE( "Parameter lexer scanning corrupted input", "[Parser::Parameter]" ) {
     SourceWrapper source(input);
     BufferedInput bi(source, 10);
     Lexer lexer(bi);
+
+    bi.setLimit(input.str().size());
 
     for (auto& expToken : tokens) {
         const auto& token = lexer.getToken();
@@ -210,6 +218,7 @@ TEST_CASE( "HTTP parser parsing whole POST request with parameters", "[Parser::H
                              "HTTP/1.1  \r\n"
                              "Connection: keep-alive\r\n"
                              "Content-Type: application/x-www-form-urlencoded\r\n"
+                             "Content-Length: 68\r\n"
                              "\r\n"
                              "name=Gordon+Czapiger&specials="
                              "%2B%21%40%23%24%25%5E%26*%28%29%7B%7D1");
@@ -225,7 +234,7 @@ TEST_CASE( "HTTP parser parsing whole POST request with parameters", "[Parser::H
     CHECK(req.getResource() == "/resource");
     CHECK(req.getVersion() == "HTTP/1.1");
 
-    REQUIRE(req.getHeaders().size() == 2);
+    REQUIRE(req.getHeaders().size() == 3);
     CHECK(req.getHeaders().at("Connection") == "keep-alive");
     CHECK(req.getHeaders().at("Content-Type") == "application/x-www-form-urlencoded");
 
