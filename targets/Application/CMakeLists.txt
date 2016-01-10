@@ -12,6 +12,6 @@ file(GLOB_RECURSE SRCS  *.cpp)
 add_executable(${PROJECT_NAME} ${SRCS})
 
 # Set up dependencies
-add_dependencies(${PROJECT_NAME} HttpServer)
+add_dependencies(${PROJECT_NAME} HttpServer WebService)
 
-target_link_libraries(${PROJECT_NAME} HttpServer)
+target_link_libraries(${PROJECT_NAME} HttpServer WebService)
