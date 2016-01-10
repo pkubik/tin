@@ -66,6 +66,7 @@ endif (CMAKE_CXX_COMPILER_ID STREQUAL GNU OR CMAKE_CXX_COMPILER_ID STREQUAL Clan
 # specify subprojects
 
 add_subdirectory(targets/Common)
+add_subdirectory(targets/DataStore)
 add_subdirectory(targets/Network)
 add_subdirectory(targets/HttpParser)
 add_subdirectory(targets/HttpServer)
