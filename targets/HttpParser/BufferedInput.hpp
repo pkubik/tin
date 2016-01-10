@@ -18,6 +18,7 @@ namespace parser {
 class SourceReader {
 public:
     virtual int read(char* buffer, size_t length) = 0;
+    virtual ~SourceReader() = default;
 };
 
 /**
@@ -61,6 +62,7 @@ private:
 
             if (end == 0) {
                 limit = 0;
+                buffer[cursor] = END;
             }
         }
     }
