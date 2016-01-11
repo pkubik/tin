@@ -22,6 +22,9 @@ class WorkerPool;
 
 struct Worker {
 public:
+    typedef std::list<Worker>::iterator Reference;
+    Reference reference;
+
     Worker(WorkerPool& pool);
     void start();
     void work();
@@ -51,6 +54,7 @@ public:
     void stop();
     void execute(network::Socket&& connection);
     void reuse(Worker* worker);
+    void removeWorker();
     ~WorkerPool();
 
 private:

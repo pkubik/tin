@@ -133,6 +133,16 @@ void WorkerPool::reuse(Worker* worker) {
     readyWorkers.push_back(worker);
 }
 
+void WorkerPool::removeWorker() {
+    // executed under lock
+    LOGT("Removing an idle worker (" << readyWorkers.size() << "/" << workers.size() << " workers ready).");
+
+    auto worker = readyWorkers.back();
+    readyWorkers.pop_back();
+
+    workers.erase(worker->reference);
+}
+
 WorkerPool::~WorkerPool() {
     stop();
 }
@@ -145,6 +155,9 @@ void WorkerPool::execute(Socket&& connection) {
     if (readyWorkers.empty()) {
         LOGT("Creating new worker.");
         workers.emplace_back(*this);
+        workers.back().reference = workers.end();
+        --workers.back().reference;
+
         worker = &workers.back();
         worker->start();
     } else {
@@ -153,6 +166,11 @@ void WorkerPool::execute(Socket&& connection) {
     }
 
     worker->execute(std::move(connection));
+
+    // keep 1:1 ratio between ready, and busy workers
+    while (workers.size() < readyWorkers.size() * 2) {
+        removeWorker();
+    }
 }
 
 }
