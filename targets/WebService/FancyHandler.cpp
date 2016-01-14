@@ -23,11 +23,36 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     }
 
     std::string echo = "/echo/";
-    if (request.getResource().compare(0, echo.length(), echo) != 0) {
+    if (request.getResource().compare(0, echo.length(), echo) == 0) {
+        return handleSuccessEcho(request);
+    }
+
+    std::string student = "/student";
+    if (request.getResource().compare(0, student.length(), student) == 0) {
+        auto it = request.getParameters().find("q");
+        if(request.getParameters().end() != it)
+        {
+            it = request.getParameters().find("id");
+            if(request.getParameters().end() != it)
+            {
+                // wyswietla szczegoly studenta
+            }
+            it = request.getParameters().find("from");
+            if(request.getParameters().end() != it)
+            {
+                it = request.getParameters().find("to");
+                if(request.getParameters().end() != it)
+                {
+                     // wyswietl przedział from to
+                }
+            }
+            // wyswietl cala tebele
+        }
+
         return handle404Error(request);
     }
 
-    return handleSuccess(request);
+    return handle404Error(request);
 }
 
 // internal handlers not required by the server API
@@ -63,7 +88,7 @@ Response FancyHandler::handle404Error(const Request& request) const {
     return response;
 }
 
-Response FancyHandler::handleSuccess(const Request& request) const {
+Response FancyHandler::handleSuccessEcho(const Request& request) const {
     Response response;
 
     response.code = 200;

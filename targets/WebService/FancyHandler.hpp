@@ -31,7 +31,7 @@ private:
     Response handleRequestError() const ;
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
-    Response handleSuccess(const Request& request) const ;
+    Response handleSuccessEcho(const Request& request) const ;
 
     /*
      * HTML templater call.
