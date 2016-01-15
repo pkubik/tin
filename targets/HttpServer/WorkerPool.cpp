@@ -9,6 +9,7 @@
 
 #include "WorkerPool.hpp"
 #include "Handler.hpp"
+#include "Network/Abortable.hpp"
 #include "Common/Logger.hpp"
 #include "Exception.hpp"
 
@@ -46,7 +47,7 @@ public:
 };
 
 bool waitForWork(int pipeEnd, unsigned timeout = -1) {
-    ::pollfd pfd = {pipeEnd, POLLIN, 0};
+    ::pollfd pfd = {pipeEnd, POLLIN|POLLERR, 0};
     int ret = ::poll(&pfd, 1, timeout);
     if (ret == 1 && pfd.revents & POLLIN) {
         char buffer;
@@ -99,12 +100,12 @@ void Worker::handle() {
         LOGW("Received invalid request.");
         const auto& response = pool.handler.handle(result.first, RequestError::PARSE);
         const auto& responseText = http::Generator::generate(response);
-        connection.write(responseText.c_str(), responseText.length());
+        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0]);
     } else {
         LOGT("Handling request...");
         const auto& response = pool.handler.handle(result.first, RequestError::NONE);
         const auto& responseText = http::Generator::generate(response);
-        connection.write(responseText.c_str(), responseText.length());
+        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0]);
     }
 
     connection.close();

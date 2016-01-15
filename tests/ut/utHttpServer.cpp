@@ -10,6 +10,7 @@
 #include "catch/catch.hpp"
 
 #include "HttpServer/HttpServer.hpp"
+#include "Network/Abortable.hpp"
 #include "Common/Logger.hpp"
 
 #include <chrono>
@@ -162,15 +163,18 @@ TEST_CASE( "Server handle simple request", "[Server]" ) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         Socket client = Socket::connectINET("localhost", std::to_string(port));
-        client.write(requestText, sizeof(requestText));
+        abortableWriteAll(client, requestText, sizeof(requestText), 0);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         char buffer[sizeof(responseText)];
-        client.receive(buffer, sizeof(buffer));
+        CHECK(!abortableReadAll(client, buffer, sizeof(buffer) - 1, 0));
         buffer[sizeof(buffer) - 1] = '\0';
 
         CHECK(std::string(buffer) == std::string(responseText));
 
-        // may cause data races - only for testing
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
         server.stop();
     });
 
@@ -205,15 +209,18 @@ TEST_CASE( "Server handle POST request", "[Server]" ) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         Socket client = Socket::connectINET("localhost", std::to_string(port));
-        client.write(requestText, sizeof(requestText));
+        abortableWriteAll(client, requestText, sizeof(requestText), 0);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         char buffer[sizeof(responseText)];
-        client.receive(buffer, sizeof(buffer));
+        CHECK(!abortableReadAll(client, buffer, sizeof(buffer) - 1, 0));
         buffer[sizeof(buffer) - 1] = '\0';
 
         CHECK(std::string(buffer) == std::string(responseText));
 
-        // may cause data races - only for testing
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
         server.stop();
     });
 

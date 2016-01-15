@@ -9,8 +9,6 @@
 #include "Common/Logger.hpp"
 #include "Common/Utils.hpp"
 
-#include "utils/fd-utils.hpp"
-
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -21,8 +19,6 @@
 #include <chrono>
 #include <thread>
 
-using namespace utils;
-
 namespace network {
 
 namespace {
@@ -30,6 +26,24 @@ namespace {
 const int MAX_QUEUE_LENGTH = 1000;
 const int RETRY_CONNECT_STEP_MS = 10;
 const int UNIX_SOCKET_PROTOCOL = 0;
+
+void closeFD(int fd)
+{
+    if (fd < 0) {
+        return;
+    }
+
+    for (;;) {
+        if (-1 == ::close(fd)) {
+            if (errno == EINTR) {
+                LOGT("close() interrupted by a signal, retrying");
+                continue;
+            }
+            LOGE("Error in close: " << getErrorMessage());
+        }
+        break;
+    }
+}
 
 std::unique_ptr<::addrinfo, void(*)(::addrinfo*)> getAddressInfo(const std::string& host,
                                                                  const std::string& port)
@@ -72,7 +86,7 @@ void connect(const int socket,
         }
 
         // Error
-        utils::close(socket);
+        closeFD(socket);
         const std::string msg = "Error in connect: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);
@@ -117,11 +131,8 @@ int getBoundFd(const int family,
 {
     int fd = getSocketFd(family, type, protocol);
 
-    // Ensure address doesn't exist before bind() to avoid errors
-    ::unlink(reinterpret_cast<const ::sockaddr_un*>(address)->sun_path);
-
     if (-1 == ::bind(fd, address, addressLength)) {
-        utils::close(fd);
+        closeFD(fd);
         const std::string msg = "Error in bind: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);
@@ -129,7 +140,7 @@ int getBoundFd(const int family,
 
     if (-1 == ::listen(fd,
                        MAX_QUEUE_LENGTH)) {
-        utils::close(fd);
+        closeFD(fd);
         const std::string msg = "Error in listen: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);
@@ -184,7 +195,7 @@ Socket Socket::accept()
 void Socket::close()
 {
     try {
-        utils::close(mFD);
+        closeFD(mFD);
     } catch (std::exception& e) {
         LOGE("Error in Socket's destructor: " << e.what());
     }
@@ -236,20 +247,14 @@ unsigned short Socket::getPort() const
     }
 }
 
-void Socket::write(const void* bufferPtr, const size_t size) const
-{
-    utils::write(mFD, bufferPtr, size);
-}
-
-void Socket::read(void* bufferPtr, const size_t size) const
-{
-    utils::read(mFD, bufferPtr, size);
-}
-
 size_t Socket::send(const void* bufferPtr, const size_t size) const
 {
-    int ret = ::send(mFD, bufferPtr, size, 0);
+    int ret = ::send(mFD, bufferPtr, size, MSG_DONTWAIT);
     if (ret == -1) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;
+        }
+
         const std::string msg = "Socket send error: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);
@@ -260,8 +265,12 @@ size_t Socket::send(const void* bufferPtr, const size_t size) const
 
 size_t Socket::receive(void* bufferPtr, const size_t size) const
 {
-    int ret = ::recv(mFD, bufferPtr, size, 0);
+    int ret = ::recv(mFD, bufferPtr, size, MSG_DONTWAIT);
     if (ret == -1) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;
+        }
+
         const std::string msg = "Socket receive error: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);

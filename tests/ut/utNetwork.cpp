@@ -32,11 +32,6 @@ TEST_CASE( "Get socket type", "[Network::Socket]" ) {
         Socket socket = Socket::createINET("localhost", "");
         CHECK(socket.getType() == Socket::Type::INET);
     }
-
-    {
-        Socket socket = Socket::createUNIX(SOCKET_PATH);
-        CHECK(socket.getType() == Socket::Type::UNIX);
-    }
 }
 
 TEST_CASE( "Internet socket communication", "[Network::Socket]" ) {
@@ -51,20 +46,24 @@ TEST_CASE( "Internet socket communication", "[Network::Socket]" ) {
     auto clientThread = std::thread([&] {
         Socket client = Socket::connectINET(host, std::to_string(port));
         CHECK(client.getType() == Socket::Type::INET);
-        client.write(msg, sizeof(msg));
+        CHECK(client.send(msg, sizeof(msg)) == sizeof(msg));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(400));
 
         char buffer[sizeof(msg) + 1];
-        client.read(buffer, sizeof(msg));
+        CHECK(client.receive(buffer, sizeof(msg)) == sizeof(msg));
         CHECK(std::string(buffer) == std::string(msg));
     });
 
     auto connection = server.accept();
     char buffer[sizeof(msg)];
 
-    connection.read(buffer, sizeof(msg));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    CHECK(connection.receive(buffer, sizeof(msg)) == sizeof(msg));
     CHECK(std::string(buffer) == std::string(msg));
 
-    connection.write(msg, sizeof(msg));
+    CHECK(connection.send(msg, sizeof(msg)) == sizeof(msg));
 
     clientThread.join();
 }

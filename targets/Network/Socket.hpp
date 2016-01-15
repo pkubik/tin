@@ -44,22 +44,6 @@ public:
     int getFD() const;
 
     /**
-     * Write data using the file descriptor
-     *
-     * @param bufferPtr buffer with the data
-     * @param size size of the buffer
-     */
-    void write(const void* bufferPtr, const size_t size) const;
-
-    /**
-     * Reads a value of the given type.
-     *
-     * @param bufferPtr buffer with the data
-     * @param size size of the buffer
-     */
-    void read(void* bufferPtr, const size_t size) const;
-
-    /**
      * Send data using the file descriptor
      *
      * @param bufferPtr buffer with the data
