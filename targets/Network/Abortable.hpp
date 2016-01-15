@@ -23,7 +23,7 @@ namespace network {
  * @return          number of bytes read, and information if it was aborted
  */
 std::pair<size_t, bool> abortableRead(Socket& socket,
-                                      const char* buffer,
+                                      char* buffer,
                                       const size_t size,
                                       const short pipeEnd,
                                       const int timeout = -1);

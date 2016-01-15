@@ -26,22 +26,21 @@ namespace {
 class SourceWrapper : public SourceReader {
 private:
     Socket& socket;
-    ::pollfd fds[2];
+    int pipeEnd;
 
 public:
     SourceWrapper(Socket& socket, int pipeEnd)
         : socket(socket)
-        , fds{{socket.getFD(), POLLIN, 0},
-              {pipeEnd, POLLIN, 0}}
+        , pipeEnd(pipeEnd)
     {}
 
     virtual int read(char* buffer, size_t length) {
-        int ret = ::poll(fds, 2, 2000);
+        auto ret = abortableRead(socket, buffer, length, pipeEnd);
 
-        if (ret == 1 && fds[0].revents & POLLIN) {
-            return socket.receive(buffer, length);
-        } else {
+        if (ret.second) {
             return 0;
+        } else {
+            return ret.first;
         }
     }
 };

@@ -23,14 +23,12 @@ std::pair<size_t, bool> abortableRead(Socket& socket,
     do {
         int ret = ::poll(fds, 2, timeout);
 
-        if (ret == 1 && fds[0].revents & POLLIN) {
-            break;
-        } else if (!(ret == 1 && fds[0].revents & POLLIN)) {
+        if (!(ret == 1 && fds[0].revents & POLLIN)) {
             return std::make_pair(ready, true);
         }
 
         ready += socket.receive(buffer + ready, size - ready);
-    } while (ready < size);
+    } while (ready == 0);
 
     return std::make_pair(ready, false);
 }
