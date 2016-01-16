@@ -21,6 +21,7 @@ WebService::WebService()
     configuration.setConfiguration();
     std::string connString = configuration.getConnctionString();
     dataBase.setConnectionString(connString);
+    handler.setDataBase(dataBase);
 
 }
 

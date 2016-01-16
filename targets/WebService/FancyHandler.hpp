@@ -26,7 +26,12 @@ using namespace server;
 
 class FancyHandler : public Handler {
 public:
+    store::DataStore dataBase;
+
+    FancyHandler();
     virtual Response handle(const Request& request, RequestError error);
+
+    void setDataBase (store::DataStore &store);
 
 private:
 
@@ -35,6 +40,7 @@ private:
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
+    Response handleSuccessTable(const Request& request, std::string mess) const ;
     Response handleSuccessMain(const Request& request) const ;
 
     /*

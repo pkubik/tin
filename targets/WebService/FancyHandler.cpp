@@ -12,6 +12,12 @@
 
 using namespace server;
 
+FancyHandler::FancyHandler()
+    : dataBase("")
+{
+
+}
+
 Response FancyHandler::handle(const Request& request, RequestError error) {
 	LOGT("Echo handler handles request...");
 
@@ -32,6 +38,7 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     if (request.getResource().compare(0, echo.length(), main) == 0) {
         return handleSuccessMain(request);
     }
+
     std::string student = "/student";
     if (request.getResource().compare(0, student.length(), student) == 0) {
         auto it = request.getParameters().find("q");
@@ -51,7 +58,15 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
                      // wyswietl przedział from to
                 }
             }
-            // wyswietl cala tebele
+            Table tabela = dataBase.execQuery("SELECT * FROM students;");
+            std::string mess = "\nLiczba kolumn: " + std::to_string(tabela.tableSize()) + "\nLiczba wierszy: " + std::to_string(tabela.rowSize());
+            for (std::string str : tabela.getColumnsNames())
+            {
+                ;
+            }
+            std::cout << "\nOM OM OM\n";
+            return handleSuccessTable(request, mess);
+
         }
 
         return handle404Error(request);
@@ -100,6 +115,17 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
     constexpr char echo[] = "/echo/";
 
     fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+Response FancyHandler::handleSuccessTable(const Request& request, std::string mess) const {
+    Response response;
+
+    response.code = 200;
+    constexpr char echo[] = "/echo/";
+
+    fillSimpleResponse(response, request, mess);
 
     return response;
 }
@@ -178,4 +204,9 @@ bool FancyHandler::acceptsHtml(const Request& request) const {
     }
 
     return false;
+}
+
+void FancyHandler::setDataBase(store::DataStore &store)
+{
+    dataBase = store;
 }
