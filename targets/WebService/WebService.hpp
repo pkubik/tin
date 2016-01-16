@@ -14,6 +14,7 @@
 #include "Common/Logger.hpp"
 #include "FancyHandler.hpp"
 #include "MyConfiguration.hpp"
+#include "DataStore/DataStore.hpp"
 
 using namespace server;
 
@@ -23,7 +24,8 @@ public:
     void work();
 
 private:
-    MyConfiguration configuration;
     Server server;
     FancyHandler handler;
+    MyConfiguration configuration;
+    store::DataStore dataBase;
 };

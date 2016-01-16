@@ -15,12 +15,20 @@ WebService::WebService()
     : handler()
     , server(handler, 7777)
     , configuration()
+    , dataBase("")
 {
+    //MyConfiguration configuration;
+    configuration.setConfiguration();
+    std::string connString = configuration.getConnctionString();
+    dataBase.setConnectionString(connString);
+
 }
 
 void WebService::work()
 {
-    configuration.setConfiguration();
+
+    Table tabela = dataBase.execQuery("INSERT INTO GROUPS VALUES (16, 'Add by Krystian');");
+    std::cout << "\nil wierszy: " << tabela.tableSize();
     server.start();
 
 }

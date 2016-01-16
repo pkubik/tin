@@ -27,6 +27,7 @@ public:
     virtual Response handle(const Request& request, RequestError error);
 
 private:
+
     // internal handlers not required by the server API
     Response handleRequestError() const ;
     Response handleGeneralError(const Request& request) const ;
