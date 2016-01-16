@@ -24,5 +24,6 @@ public:
     DataStore(const string & connection);
     Table execQuery(string sql);
     void setConnectionString(const string & connection);
+    vector<string> getAllTables();
 };
 }

@@ -2,6 +2,11 @@
 
 namespace table {
 
+Table::Table(){
+    columnCount=0;
+    rowCount=0;
+}
+
 int Table::tableSize(){
     return rowCount;
 }
