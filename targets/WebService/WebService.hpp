@@ -14,7 +14,6 @@
 #include "Common/Logger.hpp"
 #include "FancyHandler.hpp"
 #include "MyConfiguration.hpp"
-#include "DataStore/DataStore.hpp"
 
 using namespace server;
 
