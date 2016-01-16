@@ -59,10 +59,14 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
                 }
             }
             Table tabela = dataBase.execQuery("SELECT * FROM students;");
-            std::string mess = "\nLiczba kolumn: " + std::to_string(tabela.tableSize()) + "\nLiczba wierszy: " + std::to_string(tabela.rowSize());
+            std::string mess = "\nLiczba kolumn: " + std::to_string(tabela.rowSize()) + "\nLiczba wierszy: " + std::to_string(tabela.tableSize());
             for (std::string str : tabela.getColumnsNames())
             {
-                ;
+                mess += " " + str;
+            }
+            for (std::string str : tabela.getColumnsTypes())
+            {
+                mess += " " + str;
             }
             std::cout << "\nOM OM OM\n";
             return handleSuccessTable(request, mess);
