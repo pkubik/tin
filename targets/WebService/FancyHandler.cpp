@@ -27,6 +27,10 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
         return handleSuccessEcho(request);
     }
 
+   	std::string main = "/";
+    if (request.getResource().compare(0, echo.length(), main) == 0) {
+        return handleSuccessMain(request);
+    }
     std::string student = "/student";
     if (request.getResource().compare(0, student.length(), student) == 0) {
         auto it = request.getParameters().find("q");
@@ -92,9 +96,18 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
     Response response;
 
     response.code = 200;
-
     constexpr char echo[] = "/echo/";
     fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+Response FancyHandler::handleSuccessMain(const Request& request) const {
+    Response response;
+
+    response.code = 200;
+    std::string msg = store::test();
+    fillSimpleResponse(response, request, msg);
 
     return response;
 }

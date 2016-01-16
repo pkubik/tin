@@ -9,11 +9,10 @@
 
 #include <pqxx/pqxx>
 #include "Table.hpp"
+#include <string>
 using namespace table;
 using namespace pqxx;
 namespace store {
-
-void test();
 
 #define TIMEOUT 0.05
 

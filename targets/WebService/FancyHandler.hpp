@@ -12,6 +12,7 @@
 #include "HttpServer/HttpServer.hpp"
 #include "HttpParser/HttpParser.hpp"
 #include "Common/Logger.hpp"
+#include "DataStore/DataStore.hpp"
 
 using namespace server;
 
@@ -33,6 +34,7 @@ private:
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
+    Response handleSuccessMain(const Request& request) const ;
 
     /*
      * HTML templater call.

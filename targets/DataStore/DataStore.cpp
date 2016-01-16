@@ -11,7 +11,12 @@
 #include <ctime>
 using namespace pqxx;
 using namespace table;
+#include <string>
+#include <iostream>
+
 namespace store {
+using namespace pqxx;
+
 
 DataStore::DataStore(const std::string &connection){
    connectionString= connection;
