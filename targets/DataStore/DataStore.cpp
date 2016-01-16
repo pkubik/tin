@@ -13,12 +13,6 @@ using namespace pqxx;
 using namespace table;
 namespace store {
 
-void test()
-{
-    // just test linking
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-}
-
 DataStore::DataStore(const std::string &connection){
    connectionString= connection;
 }

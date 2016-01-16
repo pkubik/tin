@@ -7,7 +7,6 @@
  * Patryk Szypulski
  */
 
-#include <QtSql/QtSql>
 #include <pqxx/pqxx>
 #include "Table.hpp"
 using namespace table;
