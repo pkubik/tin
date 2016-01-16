@@ -17,6 +17,7 @@ using namespace table;
 namespace store {
 using namespace pqxx;
 
+DataStore::DataStore(){}
 
 DataStore::DataStore(const std::string &connection){
    connectionString= connection;
@@ -41,17 +42,17 @@ Table DataStore::execQuery(std::string sql){
     const pipeline::query_id idQuery = pipe.insert(sql);
     std::clock_t start = std::clock();
 
-    while(!pipe.is_finished(idQuery) )
-    {
+//    while(!pipe.is_finished(idQuery) )
+//    {
 
-        if(((std::clock()-start)/(static_cast<double> (CLOCKS_PER_SEC))) > TIMEOUT)
-        {
-            pipe.cancel();
-            conn.disconnect();
-            throw std::runtime_error("query timeout");
-        }
+//        if(((std::clock()-start)/(static_cast<double> (CLOCKS_PER_SEC))) > TIMEOUT)
+//        {
+//            pipe.cancel();
+//            conn.disconnect();
+//            throw std::runtime_error("query timeout");
+//        }
 
-    }
+//    }
 
     result queryResult= pipe.retrieve(idQuery);
 
@@ -78,5 +79,25 @@ Table DataStore::execQuery(std::string sql){
        resultTable.addRow(tableRow);
      }
     return resultTable;
+}
+
+vector<string> DataStore::getAllTables(){
+    vector<string> tablesNames;
+    connection conn(connectionString);
+
+    if(!conn.is_open()){
+        throw std::runtime_error("can't connect to database");
+    }
+
+    nontransaction N(conn);
+
+    result resultQuery( N.exec( "Select table_name from information_schema.tables where table_schema='public'" ));
+
+    for (result::const_iterator i=resultQuery.begin(); i!=resultQuery.end();++i) {
+           tablesNames.push_back(i[0].as<std::string>());
+        }
+
+    conn.disconnect();
+    return tablesNames;
 }
 }

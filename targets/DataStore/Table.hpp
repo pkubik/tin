@@ -21,6 +21,7 @@ private:
     vector<vector<string>> queryResult;
 
 public:
+    Table();
     int tableSize();
     int rowSize();
     vector<string> getColumnsNames();
