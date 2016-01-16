@@ -9,6 +9,8 @@
 
 #include "DataStore.hpp"
 
+using namespace pqxx;
+using namespace table;
 namespace store {
 
 void test()
@@ -17,4 +19,20 @@ void test()
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 }
 
+DataStore::DataStore(const std::string &connection){
+   connectionString= connection;
+}
+
+Table DataStore::execQuery(std::string sql){
+    asyncconnection conn(connectionString);
+    if(!conn.is_open()){
+        throw std::runtime_error("can't connect to database");
+    }
+
+    nontransaction N(conn);
+
+    pipeline pipe(N);
+
+    return Table();
+}
 }
