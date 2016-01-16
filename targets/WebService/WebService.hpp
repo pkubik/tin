@@ -13,6 +13,7 @@
 #include "HttpParser/HttpParser.hpp"
 #include "Common/Logger.hpp"
 #include "FancyHandler.hpp"
+#include "MyConfiguration.hpp"
 
 using namespace server;
 
@@ -22,6 +23,7 @@ public:
     void work();
 
 private:
+    MyConfiguration configuration;
     Server server;
     FancyHandler handler;
 };
