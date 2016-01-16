@@ -210,7 +210,7 @@ bool FancyHandler::acceptsHtml(const Request& request) const {
     return false;
 }
 
-void FancyHandler::setDataBase(store::DataStore &store)
+store::DataStore& FancyHandler::getDataBase()
 {
-    dataBase = store;
+    return dataBase;
 }

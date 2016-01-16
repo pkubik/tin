@@ -15,14 +15,11 @@ WebService::WebService()
     : handler()
     , server(handler, 7777)
     , configuration()
-    , dataBase("")
 {
-    //MyConfiguration configuration;
     configuration.setConfiguration();
-    std::string connString = configuration.getConnctionString();
-    dataBase.setConnectionString(connString);
-    handler.setDataBase(dataBase);
-
+    //std::string connString = configuration.getConnctionString();
+    //handler.getDataBase().setConnectionString(connString);
+    handler.getDataBase().setConnectionString(configuration.getConnctionString());
 }
 
 void WebService::work()

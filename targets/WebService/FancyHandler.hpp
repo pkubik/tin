@@ -25,16 +25,15 @@ using namespace server;
  */
 
 class FancyHandler : public Handler {
-public:
-    store::DataStore dataBase;
+public:  
 
     FancyHandler();
     virtual Response handle(const Request& request, RequestError error);
 
-    void setDataBase (store::DataStore &store);
+    store::DataStore& getDataBase();
 
 private:
-
+    store::DataStore dataBase;
     // internal handlers not required by the server API
     Response handleRequestError() const ;
     Response handleGeneralError(const Request& request) const ;

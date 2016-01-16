@@ -28,6 +28,7 @@ void DataStore::setConnectionString(const std::string &connection){
 }
 
 Table DataStore::execQuery(std::string sql){
+    std::cout << "\nTUJESTEM :" << connectionString << std::endl;
     connection conn(connectionString);
 
     if(!conn.is_open()){

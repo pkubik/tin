@@ -12,7 +12,6 @@
 #include "HttpServer/HttpServer.hpp"
 #include "HttpParser/HttpParser.hpp"
 #include "Common/Logger.hpp"
-
 #include "FancyHandler.hpp"
 #include "MyConfiguration.hpp"
 
@@ -28,5 +27,4 @@ private:
     FancyHandler handler;
     Server server;
     MyConfiguration configuration;
-    store::DataStore dataBase;
 };
