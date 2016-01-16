@@ -8,6 +8,7 @@
  */
 
 #include "FancyHandler.hpp"
+#include <sstream>
 
 using namespace server;
 
@@ -97,6 +98,7 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
 
     response.code = 200;
     constexpr char echo[] = "/echo/";
+
     fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
 
     return response;
@@ -106,9 +108,31 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     Response response;
 
     response.code = 200;
-    std::string msg = store::test();
-    fillSimpleResponse(response, request, msg);
+    response.headers["Content-Type"] = "text/html";
 
+    NL::Template::LoaderFile loader; // Let's use the default loader that loads files from disk.
+
+    NL::Template::Template t( loader );
+
+    t.load( "res/templates/main.html" );               // Load & parse the main template and its dependencies.
+    t.block( "table" ).repeat( 2 );     // We need to know in advance that the "items" block will repeat 3 times.
+
+    std::string sql = "Select table_name from information_schema.tables where table_schema='public'";
+    std::ostringstream msgStream;
+/* Create a non-transactional object. */
+	pqxx::connection conn("user=tin host=czadzik24.pl port=5432 password=haslo dbname=tin");
+	pqxx::nontransaction N(conn);
+
+/* Execute SQL query */
+	pqxx::result R( N.exec( sql ));
+	int i=0;
+	for (pqxx::result::const_iterator c=R.begin(); c!=R.end();++c) {
+		t.block( "table" )[ i ].set("name", c[0].as<std::string>());
+		++i;
+	}
+	conn.disconnect ();
+    t.render( msgStream ); // Render the template with the variables we've set above
+    response.message=msgStream.str();
     return response;
 }
 

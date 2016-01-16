@@ -13,6 +13,7 @@
 #include "HttpParser/HttpParser.hpp"
 #include "Common/Logger.hpp"
 #include "DataStore/DataStore.hpp"
+#include "NLTemplate/NLTemplate.h"
 
 using namespace server;
 

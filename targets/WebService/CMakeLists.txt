@@ -14,6 +14,6 @@ file(GLOB_RECURSE SRCS  *.cpp)
 add_library(${PROJECT_NAME} SHARED ${SRCS})
 
 # Set up dependencies
-add_dependencies(${PROJECT_NAME} Common HttpServer DataStore)
+add_dependencies(${PROJECT_NAME} Common HttpServer DataStore NLTemplate)
 
-target_link_libraries(${PROJECT_NAME} Common HttpServer DataStore)
+target_link_libraries(${PROJECT_NAME} Common HttpServer DataStore NLTemplate)

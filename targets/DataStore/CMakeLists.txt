@@ -15,3 +15,4 @@ add_library(${PROJECT_NAME} SHARED ${SRCS})
 
 # Set up dependencies
 target_link_libraries(${PROJECT_NAME} pq pqxx)
+find_package(Qt5 COMPONENTS Sql REQUIRED)

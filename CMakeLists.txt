@@ -71,6 +71,7 @@ add_subdirectory(targets/Network)
 add_subdirectory(targets/HttpParser)
 add_subdirectory(targets/HttpServer)
 add_subdirectory(targets/WebService)
+add_subdirectory(targets/NLTemplate)
 #add_subdirectory(targets/AnyNewTarget)
 
 # build main executable
