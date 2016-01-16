@@ -16,5 +16,4 @@ using namespace store;
 TEST_CASE( "Test SQLite backend", "[DataStore]" ) {
     // TODO: implement this test
     CHECK(true == true);
-    test();
 }
