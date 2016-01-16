@@ -54,4 +54,13 @@ bool abortableReadAll(Socket& socket,
                       const short pipeEnd,
                       const int timeout = -1);
 
+/**
+ * @brief abortableWaitForConnection Wait until the socket is ready to accept
+ * @param socket                     Socket object
+ * @param pipeEnd                    fd which must be written to in order to abort
+ * @param timeout                    timeout
+ * @return                           true if there was a timeout or call has been aborted
+ */
+bool abortableWaitForConnection(Socket& socket, const int pipeEnd, const unsigned timeout = -1);
+
 }

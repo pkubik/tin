@@ -79,4 +79,20 @@ bool abortableReadAll(Socket& socket,
     return false;
 }
 
+bool abortableWaitForConnection(Socket& socket, const int pipeEnd, const unsigned timeout) {
+    ::pollfd pfds[2] = {{socket.getFD(), POLLIN|POLLERR|POLLPRI, 0},
+                        {pipeEnd, POLLIN, 0}};
+
+    do {
+        int ret = ::poll(pfds, 2, timeout);
+
+        if (ret == 1 && pfds[0].revents & POLLIN) {
+            return false;
+        }
+
+    } while (pfds[1].revents & EINTR);
+
+    return true;
+}
+
 }

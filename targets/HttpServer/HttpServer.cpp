@@ -9,6 +9,7 @@
 
 #include "HttpServer.hpp"
 #include "Exception.hpp"
+#include "Network/Abortable.hpp"
 #include "Common/Logger.hpp"
 
 #include <signal.h>
@@ -32,19 +33,6 @@ void handleSignal(int signo) {
     }
 }
 
-bool waitForConnection(Socket& socket, int pipeEnd, unsigned timeout = -1) {
-    ::pollfd pfds[2] = {{socket.getFD(), POLLIN, 0},
-                        {pipeEnd, POLLIN, 0}};
-
-    int ret = ::poll(pfds, 2, timeout);
-
-    if (ret == 1 && pfds[0].revents & POLLIN) {
-        return true;
-    }
-
-    return false;
-}
-
 }
 
 Server::Server(Handler& handler, unsigned short port)
@@ -60,7 +48,7 @@ Server::Server(Handler& handler, unsigned short port)
 }
 
 void Server::start() {
-    while (waitForConnection(socket, pipe[0])) {
+    while (!abortableWaitForConnection(socket, pipe[0])) {
         pool.execute(socket.accept());
     }
 
