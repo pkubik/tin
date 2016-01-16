@@ -162,7 +162,7 @@ TEST_CASE( "Server handle simple request", "[Server]" ) {
     auto clientThread = std::thread([&] {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-        Socket client = Socket::connectINET("localhost", std::to_string(port));
+        Socket client = Socket::connectINET("0.0.0.0", std::to_string(port));
         abortableWriteAll(client, requestText, sizeof(requestText), 0);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -208,7 +208,7 @@ TEST_CASE( "Server handle POST request", "[Server]" ) {
     auto clientThread = std::thread([&] {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-        Socket client = Socket::connectINET("localhost", std::to_string(port));
+        Socket client = Socket::connectINET("0.0.0.0", std::to_string(port));
         abortableWriteAll(client, requestText, sizeof(requestText), 0);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));

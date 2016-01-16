@@ -55,7 +55,7 @@ Server::Server(Handler& handler, unsigned short port)
     if (::pipe(pipe) == -1) {
         throw ServerException("Failed to create server's pipe.");
     }
-    socket = Socket::createINET("", std::to_string(port));
+    socket = Socket::createINET("0.0.0.0", std::to_string(port));
     this->port = socket.getPort();
 }
 
