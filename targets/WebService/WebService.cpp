@@ -26,9 +26,6 @@ WebService::WebService()
 
 void WebService::work()
 {
-
-    Table tabela = dataBase.execQuery("INSERT INTO GROUPS VALUES (16, 'Add by Krystian');");
-    std::cout << "\nil wierszy: " << tabela.tableSize();
     server.start();
 
 }
