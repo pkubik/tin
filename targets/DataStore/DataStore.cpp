@@ -48,7 +48,6 @@ Table DataStore::execQuery(const std::string & sql) const{
     result queryResult= pipe.retrieve(idQuery);
 
 
-
     for (result::const_iterator row = queryResult.begin();
          row != queryResult.end();
          ++row)
@@ -148,7 +147,7 @@ vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableN
 
 }
 /*execute select query in optional order with optional pagination*/
-Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pageSize, int pageNr){
+Table DataStore::execSelect(const std::string &sql, vector<std::string> order, int pageSize, int pageNr) const{
     connection conn(connectionString);
 
     if(!conn.is_open()){
@@ -177,6 +176,7 @@ Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pag
             throw std::runtime_error("ivalid pagination argumets");
     }
 
+    //std::cout << "Select : "+select;
     Table resultTable;
     try{
 
