@@ -1,7 +1,19 @@
-th {
-	width: 150px;
-	
-}
 
-table { 
+
+table {
+margin: auto;
+}
+tr {
+height: 35px;
+}
+th, td {
+width: 80px;
+padding: 2px;
+vertical-align: middle;
+}
+th {
+background: silver;
+}
+td {
+border: 3px ridge silver;
 }
