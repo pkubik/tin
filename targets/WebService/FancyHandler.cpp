@@ -159,7 +159,6 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     NL::Template::Template t( loader );
     t.load( configuration.getRootResDir()+"templates/detail.html" );
 
-    t.render( msgStream );
     t.set("rootResDir", configuration.getRootResDir());
     t.set("head_title", "Widok detaliczny na tabeli \"" + tableName + "\"");
     t.set("table_path", "/?table="+tableName);
