@@ -1,7 +1,11 @@
-{% include header.html %}
-{% block table %}
-</p>----------------------<br/>
-  Name: {{ name }} | Schema: {{ schema }} <br/>
-----------------------</p>
+{% include res/templates/header.html %}
+
+
+<table>
+<tr>{% block header_col %}<th style="width:100px; ">{{ field }}</th>{% endblock %}</tr>
+{% block row %}
+<tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>
 {% endblock %}
-{% include footer.html %}
+</table>
+
+{% include res/templates/footer.html %}

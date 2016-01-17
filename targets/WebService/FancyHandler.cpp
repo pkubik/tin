@@ -144,17 +144,37 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     NL::Template::Template t( loader );
 
     t.load( "res/templates/main.html" );
+    t.set("res_dir", "/home/patryk/git/tin/build");
     t.set("title", "Lista wszystkich tabel");
-
-    std::string sql = "Select table_name, table_schema from information_schema.tables";
+    t.set("head_title", "Lista wszystkich tabel");
+    std::string sql = "select distinct "
+    		"table_name, "
+    		"count(*) over (partition by table_name) as column_count "
+    		"from information_schema.columns "
+    			"where table_schema='public' "
+    			"order by table_name asc;";
     Table result = dataBase.execQuery(sql);
 
     int size = result.tableSize();
-    t.block( "table" ).repeat( size );
+    int col_num = result.rowSize();
+
+    t.block( "row" ).repeat( size );
+    t.block( "header_col" ).repeat( col_num );
+    /* fill header row fields */
+	for (int j=0; j < col_num;++j) {
+		t.block("header_col")[j].set("field", result.getColumnsNames()[j]);
+	}
+
+    NL::Template::Block & block = t.block( "row" );
+    /* fill remaining rows */
 	for (int i=0;i<size;++i) {
-		//NL::Template::Block & block = t.block( "table" )[i];
-		t.block( "table" )[i].set("name", result.getRow(i)[0]);
-		t.block( "table" )[i].set("schema", result.getRow(i)[1]);
+
+		block[i].block( "col" ).repeat( col_num );
+		/* fill columns in a specific row */
+		for (int j=0; j < col_num;++j) {
+			block[i].block("col")[j].set("field", result.getRow(i)[j]);
+
+		}
 	}
     t.render( msgStream );
 
