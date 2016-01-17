@@ -44,7 +44,9 @@ private:
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
     Response handleSuccessTable(const Request& request, const std::string tableName) const ;
+    Response handleSuccessDetails(const Request& request, const std::string tableName) const ;
     Response handleSuccessMain(const Request& request) const ;
+    Response handleFetchResource(const Request& request, const string& path) const ;
 
     /*
      * HTML templater call.

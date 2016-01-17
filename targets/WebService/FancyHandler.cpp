@@ -9,6 +9,7 @@
 
 #include "FancyHandler.hpp"
 #include <sstream>
+#include <fstream>
 
 using namespace server;
 using namespace table;
@@ -31,13 +32,24 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
         return handleGeneralError(request);
     }
-    
+    std::string res = "/res/";
+	if (request.getResource().compare(0, res.length(), res) == 0) {
+		if (request.getResource().find("..") != std::string::npos)
+			return handle404Error(request);
+		else
+			return handleFetchResource(request, request.getResource().substr(5));
+	}
+
     // Obsluga prostego echa
     std::string echo = "/echo/";
     if (request.getResource().compare(0, echo.length(), echo) == 0) {
         return handleSuccessEcho(request);
     }
     
+    std::string alltables = "/alltables";
+    if (request.getResource().compare(0, alltables.length(), alltables) == 0) {
+        return handleSuccessMain(request); // startingTabel puste
+    }
     /*
      * W pierwszej kolejnosci sprawdzamy czy uzytkownik wszedl w 'Strone glowna' czli /
      * czy moze zapytanie ma parametry.
@@ -48,26 +60,39 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
      * 
      */ 
     
-     std::string main = "/";
-     if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
-        if(configuration.getStartingTable() == "") //co przewiduje config.ini
+    std::string main = "/";
+    if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
+        auto itTable = request.getParameters().find("table");
+        if(request.getParameters().end() != itTable) // czy jest parametr table
         {
-            return handleSuccessMain(request); // startingTabel puste
+            auto fkVector = dataBase.getPrimaryKeyColumnName(itTable->second);
+            auto nameFk = fkVector.front();
+            auto itFk = request.getParameters().find(nameFk);
+            if(request.getParameters().end() != itFk) // czy jest parametr klucza obcego
+            {
+                return handleSuccessDetails(request, itTable->second); // pokazanie widoku detlicznego
+            }
+            else
+            {
+                return handleSuccessTable(request, itTable->second); // pokazanie tabeli
+            }
+            
         }
         else
         {
-            std::string table = configuration.getStartingTable();
-            return handleSuccessTable(request, table); // pokazanie startingTable
+            if(configuration.getStartingTable() == "") //co przewiduje config.ini
+            {
+                return handleSuccessMain(request); // startingTabel puste
+            }
+            else
+            {
+                std::string table = configuration.getStartingTable();
+                return handleSuccessTable(request, table); // pokazanie startingTable
+            }
         }
-     }
-     else // przypadek z parametrami
-     {
-         
-     }
+    }
      
-    
-     
-    return handle404Error(request);
+     return handle404Error(request);
 }
 
 // internal handlers not required by the server API
@@ -114,7 +139,31 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
     return response;
 }
 
-// to do!
+Response FancyHandler::handleFetchResource(const Request& request, const std::string& path) const {
+    Response response;
+
+    std::ifstream in(configuration.getRootResDir()+path);
+    std::string msg((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    response.message=msg;
+    response.code = 200;
+    response.headers["Content-Type"] = "text/css";
+
+    return response;
+}
+
+// dla Patryka!
+Response FancyHandler::handleSuccessDetails(const Request& request, const std::string tableName) const {
+    Response response;
+
+    response.code = 200;
+    constexpr char echo[] = "/";
+
+    fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+
 Response FancyHandler::handleSuccessTable(const Request& request, const std::string tableName) const {
     Response response;
     std::ostringstream msgStream;
@@ -124,6 +173,7 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     NL::Template::Template t( loader );
    
     t.load( "res/templates/table.html" );
+    t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Tabela \"" + tableName + "\"");
     t.set("head_title", "Tabela \"" + tableName + "\"");
     std::string sql = "select * from " + tableName + ";";
@@ -191,7 +241,7 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     NL::Template::Template t( loader );
 
     t.load( "res/templates/main.html" );
-    t.set("res_dir", "/home/patryk/git/tin/build");
+    t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Lista wszystkich tabel");
     t.set("head_title", "Lista wszystkich tabel");
     std::string sql = "select distinct "

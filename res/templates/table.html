@@ -1,8 +1,8 @@
 {% include res/templates/header.html %}
 
 
-<table style="widht:90%">
-<tr>{% block header_col %}<th style="width:100px; ">{{ field }}</th>{% endblock %}</tr>
+<table>
+<tr>{% block header_col %}<th>{{ field }}</th>{% endblock %}</tr>
 {% block row %}
 <tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>
 {% endblock %}
