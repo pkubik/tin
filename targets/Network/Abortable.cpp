@@ -28,6 +28,10 @@ std::pair<size_t, bool> abortableRead(Socket& socket,
         }
 
         ready += socket.receive(buffer + ready, size - ready);
+
+        if (socket.getType() == Socket::Type::INVALID) {
+            return std::make_pair(0, true);
+        }
     } while (ready == 0);
 
     return std::make_pair(ready, false);
@@ -51,6 +55,10 @@ bool abortableWriteAll(Socket& socket,
         }
 
         sent += socket.send(buffer + sent, size - sent);
+
+        if (socket.getType() == Socket::Type::INVALID) {
+            return true;
+        }
     } while (sent < size);
 
     return false;
@@ -74,6 +82,10 @@ bool abortableReadAll(Socket& socket,
         }
 
         ready += socket.receive(buffer + ready, size - ready);
+
+        if (socket.getType() == Socket::Type::INVALID) {
+            return true;
+        }
     } while (ready < size);
 
     return false;
