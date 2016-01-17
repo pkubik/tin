@@ -9,6 +9,7 @@
 
 #include "FancyHandler.hpp"
 #include <sstream>
+#include <fstream>
 
 using namespace server;
 using namespace table;
@@ -30,6 +31,15 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
 
     if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
         return handleGeneralError(request);
+    }
+
+    std::string res = "/res/";
+    if (request.getResource().compare(0, res.length(), res) == 0) {
+    	LOGT("SUBSTR: "+request.getResource().substr(5));
+    	if (request.getResource().find("..") != std::string::npos)
+    		return handle404Error(request);
+    	else
+        	return handleFetchResource(request, request.getResource().substr(5));
     }
 
     std::string echo = "/echo/";
@@ -103,6 +113,19 @@ Response FancyHandler::handleSuccessTable(const Request& request) const {
     response.message=generateHtmlTemplate(configuration.getStartingTable());
     response.code = 200;
     response.headers["Content-Type"] = "text/html";
+
+    return response;
+}
+
+Response FancyHandler::handleFetchResource(const Request& request, const std::string& path) const {
+    Response response;
+
+    std::ifstream in(configuration.getRootResDir()+path);
+    std::string msg((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    LOGT("TEST path: "+configuration.getRootResDir()+path);
+    response.message=msg;
+    response.code = 200;
+    response.headers["Content-Type"] = "text/css";
 
     return response;
 }

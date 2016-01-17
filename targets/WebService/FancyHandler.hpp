@@ -16,7 +16,6 @@
 #include "DataStore/DataStore.hpp"
 #include "NLTemplate/NLTemplate.h"
 
-
 using namespace server;
 
 /*
@@ -45,7 +44,7 @@ private:
     Response handleSuccessEcho(const Request& request) const ;
     Response handleSuccessTable(const Request& request) const ;
     Response handleSuccessMain(const Request& request) const ;
-
+    Response handleFetchResource(const Request& request, const string& path) const ;
     /*
      * HTML templater call.
      * Note: original templater API should be different! (accept additional parameters)
