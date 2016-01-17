@@ -162,6 +162,8 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     t.render( msgStream );
     t.set("rootResDir", configuration.getRootResDir());
     t.set("head_title", "Widok detaliczny na tabeli \"" + tableName + "\"");
+    t.set("table_path", "/?table="+tableName);
+    t.set("table_description", "Cała tabela "+tableName);
 
     std::string columnName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
     auto it = request.getParameters().find(columnName);
@@ -172,8 +174,7 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     int col_num = result.rowSize();
 
     t.block( "row" ).repeat(col_num);
-    for (int i=0;i<col_num;++i){
-    	LOGT("zrzucam kolumnę numer " + i);
+    for (int i=0;i<col_num;++i) {
     	t.block("row")[i].set("colName", result.getColumnsNames()[i]);
     	t.block("row")[i].set("colValue", result.getRow(0)[i]);
     }
