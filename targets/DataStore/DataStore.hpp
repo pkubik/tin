@@ -26,7 +26,7 @@ public:
     void setConnectionString(const string & connection);
     vector<string> getAllTables();
     std::tuple<bool,string,string> relatedTable(const string &tableName,const string &columnName) const;
-    vector<string> getPrimaryKeyColumnName(string &tableName);
-    Table execSelect(string sql,vector<string> order,int pageSize,int pageNr);
+    vector<std::string> getPrimaryKeyColumnName(const std::string &tableName) const;
+    Table execSelect(std::string &sql, vector<std::string> order = vector<string>(), int pageSize = -1, int pageNr = -1);
 };
 }

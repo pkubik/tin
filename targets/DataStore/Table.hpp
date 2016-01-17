@@ -16,7 +16,6 @@ class Table{
 private:
     int rowCount;
     int columnCount;
-    vector<string> columnsType;
     vector<string> columnsNames;
     vector<vector<string>> queryResult;
 
@@ -25,7 +24,6 @@ public:
     int tableSize();
     int rowSize();
     vector<string> getColumnsNames();
-    vector<string> getColumnsTypes();
     vector<string> getRow(int i);
     void addRow(vector<std::string> &row);
     void addColumnName(string columName);
