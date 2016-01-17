@@ -92,7 +92,7 @@ vector<string> DataStore::getAllTables(){
     return tablesNames;
 }
 /*if selected column is foreign key in selected table returns name of related tabel and column name in this tabel*/
-std::tuple<bool,string,string> DataStore::relatedTable(std::string &tableName, std::string &columnName){
+std::tuple<bool,std::string,std::string> DataStore::relatedTable(const std::string &tableName, const std::string &columnName) const {
     connection conn(connectionString);
 
     if(!conn.is_open()){

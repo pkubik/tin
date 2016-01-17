@@ -131,12 +131,25 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 
     int size = result.tableSize();
     int col_num = result.rowSize();
-
+    
+    std::tuple<bool,std::string,std::string> isFKcolumn[col_num];
     t.block( "row" ).repeat( size );
     t.block( "header_col" ).repeat( col_num );
     /* fill header row fields */
     for (int j=0; j < col_num;++j) {
-        t.block("header_col")[j].set("field", result.getColumnsNames()[j]);
+        
+        const std::string colName = result.getColumnsNames()[j];
+        isFKcolumn[j] = dataBase.relatedTable(tableName, colName);
+        if(std::get<0>(isFKcolumn[j]))
+        {
+            std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + ">" + colName + "</a>";
+            t.block("header_col")[j].set("field", link);
+        }
+        else
+        {
+            t.block("header_col")[j].set("field", colName);
+        }
+        
     }
 
     NL::Template::Block & block = t.block( "row" );
@@ -145,9 +158,19 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 
         block[i].block( "col" ).repeat( col_num );
         /* fill columns in a specific row */
+        
+        
         for (int j=0; j < col_num;++j) {
-            block[i].block("col")[j].set("field", result.getRow(i)[j]);
-
+            auto cell = result.getRow(i)[j];
+            if(std::get<0>(isFKcolumn[j]))
+            {
+                std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell +">" + cell + "</a>";
+                block[i].block("col")[j].set("field", link);
+            }
+            else
+            {
+                block[i].block("col")[j].set("field", cell);
+            }
         }
     }
     t.render( msgStream );
