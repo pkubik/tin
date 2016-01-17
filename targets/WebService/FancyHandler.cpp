@@ -144,6 +144,7 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     NL::Template::Template t( loader );
    
     t.load( "res/templates/table.html" );
+    t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Tabela \"" + tableName + "\"");
     t.set("head_title", "Tabela \"" + tableName + "\"");
     std::string sql = "select * from " + tableName + ";";
@@ -211,7 +212,7 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     NL::Template::Template t( loader );
 
     t.load( "res/templates/main.html" );
-    t.set("res_dir", "/home/patryk/git/tin/build");
+    t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Lista wszystkich tabel");
     t.set("head_title", "Lista wszystkich tabel");
     std::string sql = "select distinct "
