@@ -198,6 +198,8 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Tabela \"" + tableName + "\"");
     t.set("head_title", "Tabela \"" + tableName + "\"");
+    t.set("table_path", "/alltables");
+    t.set("table_description", "Wszystkie tabele");
     std::string sql = "select * from " + tableName + ";";
     Table result = dataBase.execQuery(sql);
 
@@ -205,6 +207,15 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     int col_num = result.rowSize();
     
     std::tuple<bool,std::string,std::string> isFKcolumn[col_num];
+    std::string pkColName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
+    LOGT("pkColName: " + pkColName);
+    int pkColNum=-1;
+    for (int i=0;i<=col_num;++i) {
+    	if (result.getColumnsNames()[i] == pkColName) {
+    		pkColNum = i;
+    		break;
+    	}
+    }
     t.block( "row" ).repeat( size );
     t.block( "header_col" ).repeat( col_num );
     /* fill header row fields */
@@ -237,6 +248,10 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
             {
                 std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell +">" + cell + "</a>";
                 block[i].block("col")[j].set("field", link);
+            }
+            else if (pkColNum == j) {
+            	std::string link = "<a href=/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell +">" + cell + "</a>";
+            	block[i].block("col")[j].set("field", link);
             }
             else
             {
