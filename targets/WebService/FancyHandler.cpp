@@ -292,22 +292,21 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     int col_num = result.rowSize();
 
     t.block( "row" ).repeat( size );
-    t.block( "header_col" ).repeat( col_num );
+    t.block( "header_col" ).repeat( 2 );
+
     /* fill header row fields */
-	for (int j=0; j < col_num;++j) {
-		t.block("header_col")[j].set("field", result.getColumnsNames()[j]);
-	}
+	t.block("header_col")[0].set("field", "Table Name");
+	t.block("header_col")[1].set("field", "Column count");
 
     NL::Template::Block & block = t.block( "row" );
     /* fill remaining rows */
 	for (int i=0;i<size;++i) {
 
-		block[i].block( "col" ).repeat( col_num );
+		block[i].block( "col" ).repeat( 2 );
 		/* fill columns in a specific row */
-		for (int j=0; j < col_num;++j) {
-			block[i].block("col")[j].set("field", result.getRow(i)[j]);
+		block[i].block("col")[0].set("field", "<a href=/?table=" + result.getRow(i)[0]+">"+result.getRow(i)[0]+"</a>");
+		block[i].block("col")[1].set("field", result.getRow(i)[1]);
 
-		}
 	}
     t.render( msgStream );
 
