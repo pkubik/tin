@@ -19,10 +19,6 @@ int Table::rowSize(){
 vector<string> Table::getColumnsNames(){
     return columnsNames;
 }
-/*shit to delete*/
-vector<string> Table::getColumnsTypes(){
-    return columnsType;
-}
 /*returns row selected by argument*/
 vector<string> Table::getRow(int i){
     return queryResult[i];

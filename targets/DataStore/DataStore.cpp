@@ -138,8 +138,6 @@ vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableN
                         "WHERE  i.indrelid = ' "+ tableName+ " '::regclass;";
 
     result primaryKeyResult( N.exec(query));
-            //= N.prepared("find")(tableName).exec();
-
     conn.disconnect();
 
     vector <string> primaryKeys;
@@ -149,8 +147,8 @@ vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableN
     return primaryKeys;
 
 }
-
-Table DataStore::execSelect(std::string sql, vector<std::string> order, int pageSize, int pageNr){
+/*execute select query in optional order with optional pagination*/
+Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pageSize, int pageNr){
     connection conn(connectionString);
 
     if(!conn.is_open()){
@@ -158,17 +156,38 @@ Table DataStore::execSelect(std::string sql, vector<std::string> order, int page
     }
     nontransaction N(conn);
 
-    string select = "select * from(" +sql + ") ext";
+    string select = "select * from(" +sql + ") ext ";
+
+    //buliding order by statement
+    if(order.size()>0){
+        select += "order by";
+        for(size_t i=0;i<order.size();++i){
+            select += " ext." + order[i] + ",";
+        }
+        //remove last ","
+        select.pop_back();
+    }
+
+    //if pagination required
+    if(pageSize>0 && pageNr>=0){
+        select += " limit " + to_string(pageSize) + " offset " + to_string(pageSize*pageNr);
+    }
+    //if pagination arguments are invalid
+    else if(pageSize!=-1 || pageNr!=-1){
+            throw std::runtime_error("ivalid pagination argumets");
+    }
 
     Table resultTable;
-   try{
+    try{
 
         result queryResult( N.exec(select));
 
+        //filling resultTable
         for (result::const_iterator row = queryResult.begin();
              row != queryResult.end();
              ++row)
         {
+            //filling resultTable's row
             vector<string> tableRow;
             for (result::tuple::const_iterator field = row->begin();
                  field != row->end();
