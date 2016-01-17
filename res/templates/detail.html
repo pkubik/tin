@@ -1,0 +1,11 @@
+{% include res/templates/header.html %}
+
+
+<table>
+<tr><th>Name</th><th>Value</th></tr>
+{% block row %}
+<tr><td>{{ colName }}</td><td>{{ colValue }}</td></tr>
+{% endblock %}
+</table>
+
+{% include res/templates/footer.html %}

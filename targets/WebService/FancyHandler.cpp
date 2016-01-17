@@ -151,15 +151,37 @@ Response FancyHandler::handleFetchResource(const Request& request, const std::st
     return response;
 }
 
-// dla Patryka!
+
 Response FancyHandler::handleSuccessDetails(const Request& request, const std::string tableName) const {
     Response response;
+    std::ostringstream msgStream;
+    NL::Template::LoaderFile loader;
+    NL::Template::Template t( loader );
+    t.load( configuration.getRootResDir()+"templates/detail.html" );
 
+    t.render( msgStream );
+    t.set("rootResDir", configuration.getRootResDir());
+    t.set("head_title", "Widok detaliczny na tabeli \"" + tableName + "\"");
+
+    std::string columnName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
+    auto it = request.getParameters().find(columnName);
+    std::string columnValue = it->second;
+    std::string sql = "select * from " + tableName + " where " + columnName + " = \'" + columnValue + "\';";
+    Table result = dataBase.execQuery(sql);
+
+    int col_num = result.rowSize();
+
+    t.block( "row" ).repeat(col_num);
+    for (int i=0;i<col_num;++i){
+    	LOGT("zrzucam kolumnę numer " + i);
+    	t.block("row")[i].set("colName", result.getColumnsNames()[i]);
+    	t.block("row")[i].set("colValue", result.getRow(0)[i]);
+    }
+    t.render( msgStream );
+
+    response.message=msgStream.str();
     response.code = 200;
-    constexpr char echo[] = "/";
-
-    fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
-
+    response.headers["Content-Type"] = "text/html";
     return response;
 }
 
@@ -172,7 +194,7 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 
     NL::Template::Template t( loader );
    
-    t.load( "res/templates/table.html" );
+    t.load( configuration.getRootResDir()+"templates/table.html" );
     t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Tabela \"" + tableName + "\"");
     t.set("head_title", "Tabela \"" + tableName + "\"");
@@ -207,9 +229,8 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     for (int i=0;i<size;++i) {
 
         block[i].block( "col" ).repeat( col_num );
+
         /* fill columns in a specific row */
-        
-        
         for (int j=0; j < col_num;++j) {
             auto cell = result.getRow(i)[j];
             if(std::get<0>(isFKcolumn[j]))
@@ -240,7 +261,7 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 
     NL::Template::Template t( loader );
 
-    t.load( "res/templates/main.html" );
+    t.load( configuration.getRootResDir()+"templates/main.html" );
     t.set("rootResDir", configuration.getRootResDir());
     t.set("title", "Lista wszystkich tabel");
     t.set("head_title", "Lista wszystkich tabel");
