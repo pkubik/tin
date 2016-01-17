@@ -20,6 +20,8 @@ public:
 
     void setConfiguration();
     std::string getConnctionString();
+    std::string getStartingTable() const;
+    std::string getRootResDir() const;
 
 private:
     std::string configFile;
@@ -29,6 +31,8 @@ private:
     std::string userdb;
     std::string password;
     std::string dbname;
+    
+    std::string rootResDir;
     std::string startingTable;
 
     void findOption(std::string &option, std::string optionName);

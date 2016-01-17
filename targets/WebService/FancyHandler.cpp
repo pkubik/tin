@@ -14,9 +14,11 @@ using namespace server;
 using namespace table;
 
 FancyHandler::FancyHandler()
-    : dataBase("")
+    : configuration()
+    , dataBase("")
 {
-
+    configuration.setConfiguration();
+    dataBase.setConnectionString(configuration.getConnctionString());
 }
 
 Response FancyHandler::handle(const Request& request, RequestError error) {
@@ -34,47 +36,17 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     if (request.getResource().compare(0, echo.length(), echo) == 0) {
         return handleSuccessEcho(request);
     }
-
-   	std::string main = "/";
-    if (request.getResource().compare(0, echo.length(), main) == 0) {
-        return handleSuccessMain(request);
-    }
-
-    std::string student = "/student";
-    if (request.getResource().compare(0, student.length(), student) == 0) {
-        auto it = request.getParameters().find("q");
-        if(request.getParameters().end() != it)
-        {
-            it = request.getParameters().find("id");
-            if(request.getParameters().end() != it)
-            {
-                // wyswietla szczegoly studenta
-            }
-            it = request.getParameters().find("from");
-            if(request.getParameters().end() != it)
-            {
-                it = request.getParameters().find("to");
-                if(request.getParameters().end() != it)
-                {
-                     // wyswietl przedział from to
-                }
-            }
-            Table tabela = dataBase.execQuery("SELECT * FROM students;");
-            std::string mess = "\nLiczba kolumn: " + std::to_string(tabela.rowSize()) + "\nLiczba wierszy: " + std::to_string(tabela.tableSize());
-            for (std::string str : tabela.getColumnsNames())
-            {
-                mess += " " + str;
-            }
-            for (std::string str : tabela.getColumnsTypes())
-            {
-                mess += " " + str;
-            }
-            std::cout << "\nOM OM OM\n";
-            return handleSuccessTable(request, mess);
-
+    
+    if(configuration.getStartingTable() == "")
+    {
+        std::string main = "/";
+        if (request.getResource().compare(0, echo.length(), main) == 0) {
+            return handleSuccessMain(request);
         }
-
-        return handle404Error(request);
+    }
+    else
+    {
+        return handleSuccessTable(request);
     }
 
     return handle404Error(request);
@@ -124,13 +96,13 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
     return response;
 }
 
-Response FancyHandler::handleSuccessTable(const Request& request, std::string mess) const {
+// to do!
+Response FancyHandler::handleSuccessTable(const Request& request) const {
     Response response;
-
+    
+    response.message=generateHtmlTemplate(configuration.getStartingTable());
     response.code = 200;
-    constexpr char echo[] = "/echo/";
-
-    fillSimpleResponse(response, request, mess);
+    response.headers["Content-Type"] = "text/html";
 
     return response;
 }

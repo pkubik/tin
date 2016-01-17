@@ -12,8 +12,10 @@
 #include "HttpServer/HttpServer.hpp"
 #include "HttpParser/HttpParser.hpp"
 #include "Common/Logger.hpp"
+#include "MyConfiguration.hpp"
 #include "DataStore/DataStore.hpp"
 #include "NLTemplate/NLTemplate.h"
+
 
 using namespace server;
 
@@ -33,13 +35,15 @@ public:
     store::DataStore& getDataBase();
 
 private:
+    MyConfiguration configuration;
     store::DataStore dataBase;
+
     // internal handlers not required by the server API
     Response handleRequestError() const ;
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
-    Response handleSuccessTable(const Request& request, std::string mess) const ;
+    Response handleSuccessTable(const Request& request) const ;
     Response handleSuccessMain(const Request& request) const ;
 
     /*

@@ -14,16 +14,17 @@ using namespace server;
 WebService::WebService()
     : handler()
     , server(handler, 7777)
-    , configuration()
 {
-    configuration.setConfiguration();
+    //configuration.setConfiguration();
     //std::string connString = configuration.getConnctionString();
     //handler.getDataBase().setConnectionString(connString);
-    handler.getDataBase().setConnectionString(configuration.getConnctionString());
+    //handler.getDataBase().setConnectionString(configuration.getConnctionString());
+    //handler.setStartingTable(configuration.getStartingTable());
 }
 
 void WebService::work()
 {
+
     server.start();
 
 }

@@ -25,6 +25,7 @@ void MyConfiguration::setConfiguration()
     findOption(userdb, "userdb");
     findOption(password, "password");
     findOption(dbname, "dbname");
+    findOption(rootResDir, "rootResDir");
     findOption(startingTable, "startingTable");
 }
 
@@ -78,4 +79,14 @@ std::string MyConfiguration::getConnctionString()
 {
     //"user=tin host=czadzik24.pl port=5432 password=haslo dbname=tin"
     return "user=" + userdb + " host=" + host + " port=" + std::to_string(port) + " password=" + password + " dbname=" + dbname;
+}
+
+std::string MyConfiguration::getStartingTable() const
+{
+    return startingTable;
+}
+
+std::string MyConfiguration::getRootResDir() const
+{
+    return rootResDir;
 }
