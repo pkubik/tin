@@ -14,7 +14,6 @@ using namespace table;
 using namespace pqxx;
 namespace store {
 
-#define TIMEOUT 0.05
 
 class DataStore{
 private:
@@ -25,5 +24,6 @@ public:
     Table execQuery(string sql);
     void setConnectionString(const string & connection);
     vector<string> getAllTables();
+    std::tuple<bool,string,string> relatedTable(string &tableName,string &columnName);
 };
 }
