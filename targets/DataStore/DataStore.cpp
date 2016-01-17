@@ -122,7 +122,7 @@ std::tuple<bool,string,string> DataStore::relatedTable(const std::string &tableN
     return std::make_tuple(true,resultQuery.at(0).at(0).c_str(),resultQuery.at(0).at(1).c_str());
 }
 /*returns names of columns from table's primary key*/
-vector<std::string> DataStore::getPrimaryKeyColumnName(std::string &tableName){
+vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableName) const{
 
     connection conn(connectionString);
 

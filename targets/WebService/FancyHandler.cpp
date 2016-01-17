@@ -46,6 +46,10 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
         return handleSuccessEcho(request);
     }
     
+    std::string alltables = "/alltables";
+    if (request.getResource().compare(0, alltables.length(), alltables) == 0) {
+        return handleSuccessMain(request); // startingTabel puste
+    }
     /*
      * W pierwszej kolejnosci sprawdzamy czy uzytkownik wszedl w 'Strone glowna' czli /
      * czy moze zapytanie ma parametry.
@@ -56,26 +60,39 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
      * 
      */ 
     
-     std::string main = "/";
-     if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
-        if(configuration.getStartingTable() == "") //co przewiduje config.ini
+    std::string main = "/";
+    if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
+        auto itTable = request.getParameters().find("table");
+        if(request.getParameters().end() != itTable) // czy jest parametr table
         {
-            return handleSuccessMain(request); // startingTabel puste
+            auto fkVector = dataBase.getPrimaryKeyColumnName(itTable->second);
+            auto nameFk = fkVector.front();
+            auto itFk = request.getParameters().find(nameFk);
+            if(request.getParameters().end() != itFk) // czy jest parametr klucza obcego
+            {
+                return handleSuccessDetails(request, itTable->second); // pokazanie widoku detlicznego
+            }
+            else
+            {
+                return handleSuccessTable(request, itTable->second); // pokazanie tabeli
+            }
+            
         }
         else
         {
-            std::string table = configuration.getStartingTable();
-            return handleSuccessTable(request, table); // pokazanie startingTable
+            if(configuration.getStartingTable() == "") //co przewiduje config.ini
+            {
+                return handleSuccessMain(request); // startingTabel puste
+            }
+            else
+            {
+                std::string table = configuration.getStartingTable();
+                return handleSuccessTable(request, table); // pokazanie startingTable
+            }
         }
-     }
-     else // przypadek z parametrami
-     {
-         
-     }
+    }
      
-    
-     
-    return handle404Error(request);
+     return handle404Error(request);
 }
 
 // internal handlers not required by the server API
@@ -134,7 +151,19 @@ Response FancyHandler::handleFetchResource(const Request& request, const std::st
     return response;
 }
 
-// to do!
+// dla Patryka!
+Response FancyHandler::handleSuccessDetails(const Request& request, const std::string tableName) const {
+    Response response;
+
+    response.code = 200;
+    constexpr char echo[] = "/";
+
+    fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+
 Response FancyHandler::handleSuccessTable(const Request& request, const std::string tableName) const {
     Response response;
     std::ostringstream msgStream;
