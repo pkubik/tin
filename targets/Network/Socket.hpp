@@ -49,7 +49,7 @@ public:
      * @param bufferPtr buffer with the data
      * @param size size of the buffer
      */
-    size_t send(const void* bufferPtr, const size_t size) const;
+    size_t send(const void* bufferPtr, const size_t size);
 
     /**
      * Receive data from the file descriptor.
@@ -57,7 +57,7 @@ public:
      * @param bufferPtr buffer with the data
      * @param size size of the buffer
      */
-    size_t receive(void* bufferPtr, const size_t size) const;
+    size_t receive(void* bufferPtr, const size_t size);
 
     /**
      * Accepts connection. Used by a server application.
