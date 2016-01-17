@@ -43,7 +43,7 @@ private:
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
-    Response handleSuccessTable(const Request& request) const ;
+    Response handleSuccessTable(const Request& request, const std::string tableName) const ;
     Response handleSuccessMain(const Request& request) const ;
 
     /*

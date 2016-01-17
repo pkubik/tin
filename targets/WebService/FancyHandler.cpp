@@ -31,24 +31,42 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
         return handleGeneralError(request);
     }
-
+    
+    // Obsluga prostego echa
     std::string echo = "/echo/";
     if (request.getResource().compare(0, echo.length(), echo) == 0) {
         return handleSuccessEcho(request);
     }
     
-    if(configuration.getStartingTable() == "")
-    {
-        std::string main = "/";
-        if (request.getResource().compare(0, echo.length(), main) == 0) {
-            return handleSuccessMain(request);
+    /*
+     * W pierwszej kolejnosci sprawdzamy czy uzytkownik wszedl w 'Strone glowna' czli /
+     * czy moze zapytanie ma parametry.
+     * Sprawdzenie czy w pliku config.ini podano tabele startowa.
+     * Jeśli nie podano to wywolujemy handleSuccessMain ktory wypisuje liste dostepnych tabel
+     * 
+     * Jesli podano to przechodzimy do wyswietlenia poczatkowej zawartosci konkretnej tabeli.
+     * 
+     */ 
+    
+     std::string main = "/";
+     if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
+        if(configuration.getStartingTable() == "") //co przewiduje config.ini
+        {
+            return handleSuccessMain(request); // startingTabel puste
         }
-    }
-    else
-    {
-        return handleSuccessTable(request);
-    }
-
+        else
+        {
+            std::string table = configuration.getStartingTable();
+            return handleSuccessTable(request, table); // pokazanie startingTable
+        }
+     }
+     else // przypadek z parametrami
+     {
+         
+     }
+     
+    
+     
     return handle404Error(request);
 }
 
@@ -97,10 +115,44 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
 }
 
 // to do!
-Response FancyHandler::handleSuccessTable(const Request& request) const {
+Response FancyHandler::handleSuccessTable(const Request& request, const std::string tableName) const {
     Response response;
-    
-    response.message=generateHtmlTemplate(configuration.getStartingTable());
+    std::ostringstream msgStream;
+
+    NL::Template::LoaderFile loader;
+
+    NL::Template::Template t( loader );
+   
+    t.load( "res/templates/table.html" );
+    t.set("title", "Tabela \"" + tableName + "\"");
+    t.set("head_title", "Tabela \"" + tableName + "\"");
+    std::string sql = "select * from " + tableName + ";";
+    Table result = dataBase.execQuery(sql);
+
+    int size = result.tableSize();
+    int col_num = result.rowSize();
+
+    t.block( "row" ).repeat( size );
+    t.block( "header_col" ).repeat( col_num );
+    /* fill header row fields */
+    for (int j=0; j < col_num;++j) {
+        t.block("header_col")[j].set("field", result.getColumnsNames()[j]);
+    }
+
+    NL::Template::Block & block = t.block( "row" );
+    /* fill remaining rows */
+    for (int i=0;i<size;++i) {
+
+        block[i].block( "col" ).repeat( col_num );
+        /* fill columns in a specific row */
+        for (int j=0; j < col_num;++j) {
+            block[i].block("col")[j].set("field", result.getRow(i)[j]);
+
+        }
+    }
+    t.render( msgStream );
+
+    response.message=msgStream.str();
     response.code = 200;
     response.headers["Content-Type"] = "text/html";
 
