@@ -25,6 +25,8 @@ public:
     Table execQuery(const string & sql) const;
     void setConnectionString(const string & connection);
     vector<string> getAllTables();
-    std::tuple<bool,std::string,std::string> relatedTable(const std::string &tableName,const std::string &columnName) const;
+    std::tuple<bool,string,string> relatedTable(string &tableName,string &columnName);
+    vector<string> getPrimaryKeyColumnName(string &tableName);
+    Table execSelect(string sql,vector<string> order,int pageSize,int pageNr);
 };
 }

@@ -11,11 +11,13 @@
 #include <ctime>
 #include <string>
 #include <iostream>
+#include <exception>
 
 
 namespace store {
 using namespace pqxx;
 using namespace table;
+
 
 DataStore::DataStore(){}
 
@@ -92,7 +94,7 @@ vector<string> DataStore::getAllTables(){
     return tablesNames;
 }
 /*if selected column is foreign key in selected table returns name of related tabel and column name in this tabel*/
-std::tuple<bool,std::string,std::string> DataStore::relatedTable(const std::string &tableName, const std::string &columnName) const {
+std::tuple<bool,string,string> DataStore::relatedTable(std::string &tableName, std::string &columnName){
     connection conn(connectionString);
 
     if(!conn.is_open()){
@@ -119,5 +121,79 @@ std::tuple<bool,std::string,std::string> DataStore::relatedTable(const std::stri
 
     return std::make_tuple(true,resultQuery.at(0).at(0).c_str(),resultQuery.at(0).at(1).c_str());
 }
+/*returns names of columns from table's primary key*/
+vector<std::string> DataStore::getPrimaryKeyColumnName(std::string &tableName){
 
+    connection conn(connectionString);
+
+    if(!conn.is_open()){
+        throw std::runtime_error("can't connect to database");
+    }
+
+    nontransaction N(conn);
+
+    string query = "SELECT a.attname FROM pg_index i "
+                     "JOIN pg_attribute a ON a.attrelid = i.indrelid "
+                     "AND a.attnum = ANY(i.indkey) "
+                        "WHERE  i.indrelid = ' "+ tableName+ " '::regclass;";
+
+    result primaryKeyResult( N.exec(query));
+            //= N.prepared("find")(tableName).exec();
+
+    conn.disconnect();
+
+    vector <string> primaryKeys;
+    for(size_t i= 0; i<primaryKeyResult.size();++i){
+        primaryKeys.push_back(primaryKeyResult.at(0).at(0).c_str());
+    }
+    return primaryKeys;
+
+}
+
+Table DataStore::execSelect(std::string sql, vector<std::string> order, int pageSize, int pageNr){
+    connection conn(connectionString);
+
+    if(!conn.is_open()){
+        throw std::runtime_error("can't connect to database");
+    }
+    nontransaction N(conn);
+
+    string select = "select * from(" +sql + ") ext";
+
+    Table resultTable;
+   try{
+
+        result queryResult( N.exec(select));
+
+        for (result::const_iterator row = queryResult.begin();
+             row != queryResult.end();
+             ++row)
+        {
+            vector<string> tableRow;
+            for (result::tuple::const_iterator field = row->begin();
+                 field != row->end();
+                 ++field)
+            {
+                tableRow.push_back(field->c_str());
+
+                //if first iteration get column names
+                if(row == queryResult.begin())
+                {
+                    resultTable.addColumnName(field->name());
+
+                }
+            }
+
+            resultTable.addRow(tableRow);
+        }
+    }
+    catch(pqxx::broken_connection &e){
+        throw e;
+    }
+
+    catch(std::exception& e){
+        throw std::runtime_error("Invalid query");
+    }
+    return resultTable;
+}
 }
