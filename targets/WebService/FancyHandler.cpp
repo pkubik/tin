@@ -11,6 +11,7 @@
 #include <sstream>
 
 using namespace server;
+using namespace table;
 
 FancyHandler::FancyHandler()
     : dataBase("")
@@ -136,33 +137,31 @@ Response FancyHandler::handleSuccessTable(const Request& request, std::string me
 
 Response FancyHandler::handleSuccessMain(const Request& request) const {
     Response response;
+    std::ostringstream msgStream;
 
-    response.code = 200;
-    response.headers["Content-Type"] = "text/html";
-
-    NL::Template::LoaderFile loader; // Let's use the default loader that loads files from disk.
+    NL::Template::LoaderFile loader;
 
     NL::Template::Template t( loader );
 
-    t.load( "res/templates/main.html" );               // Load & parse the main template and its dependencies.
-    t.block( "table" ).repeat( 2 );     // We need to know in advance that the "items" block will repeat 3 times.
+    t.load( "res/templates/main.html" );
+    t.set("title", "Lista wszystkich tabel");
 
-    std::string sql = "Select table_name from information_schema.tables where table_schema='public'";
-    std::ostringstream msgStream;
-/* Create a non-transactional object. */
-	pqxx::connection conn("user=tin host=czadzik24.pl port=5432 password=haslo dbname=tin");
-	pqxx::nontransaction N(conn);
+    std::string sql = "Select table_name, table_schema from information_schema.tables";
+    Table result = dataBase.execQuery(sql);
 
-/* Execute SQL query */
-	pqxx::result R( N.exec( sql ));
-	int i=0;
-	for (pqxx::result::const_iterator c=R.begin(); c!=R.end();++c) {
-		t.block( "table" )[ i ].set("name", c[0].as<std::string>());
-		++i;
+    int size = result.tableSize();
+    t.block( "table" ).repeat( size );
+	for (int i=0;i<size;++i) {
+		//NL::Template::Block & block = t.block( "table" )[i];
+		t.block( "table" )[i].set("name", result.getRow(i)[0]);
+		t.block( "table" )[i].set("schema", result.getRow(i)[1]);
 	}
-	conn.disconnect ();
-    t.render( msgStream ); // Render the template with the variables we've set above
+    t.render( msgStream );
+
     response.message=msgStream.str();
+    response.code = 200;
+    response.headers["Content-Type"] = "text/html";
+
     return response;
 }
 

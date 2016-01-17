@@ -1,13 +1,7 @@
-<html>
-<head>
-Lista Tabel
-</head>
-
-<body>
+{% include header.html %}
 {% block table %}
-</p>----------------------
-  Name: {{ name }}<br/>
+</p>----------------------<br/>
+  Name: {{ name }} | Schema: {{ schema }} <br/>
 ----------------------</p>
 {% endblock %}
-</body>
-</html>
+{% include footer.html %}
