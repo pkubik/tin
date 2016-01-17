@@ -9,6 +9,7 @@
 
 #include "FancyHandler.hpp"
 #include <sstream>
+#include <fstream>
 
 using namespace server;
 using namespace table;
@@ -31,7 +32,14 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
     if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
         return handleGeneralError(request);
     }
-    
+    std::string res = "/res/";
+	if (request.getResource().compare(0, res.length(), res) == 0) {
+		if (request.getResource().find("..") != std::string::npos)
+			return handle404Error(request);
+		else
+			return handleFetchResource(request, request.getResource().substr(5));
+	}
+
     // Obsluga prostego echa
     std::string echo = "/echo/";
     if (request.getResource().compare(0, echo.length(), echo) == 0) {
@@ -110,6 +118,18 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
     constexpr char echo[] = "/echo/";
 
     fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+Response FancyHandler::handleFetchResource(const Request& request, const std::string& path) const {
+    Response response;
+
+    std::ifstream in(configuration.getRootResDir()+path);
+    std::string msg((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    response.message=msg;
+    response.code = 200;
+    response.headers["Content-Type"] = "text/css";
 
     return response;
 }
