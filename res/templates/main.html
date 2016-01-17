@@ -1,13 +1,11 @@
-<html>
-<head>
-Lista Tabel
-</head>
+{% include res/templates/header.html %}
 
-<body>
-{% block table %}
-</p>----------------------
-  Name: {{ name }}<br/>
-----------------------</p>
+
+<table>
+<tr>{% block header_col %}<th style="width:100px; ">{{ field }}</th>{% endblock %}</tr>
+{% block row %}
+<tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>
 {% endblock %}
-</body>
-</html>
+</table>
+
+{% include res/templates/footer.html %}

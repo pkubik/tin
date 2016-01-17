@@ -9,14 +9,13 @@
 
 #include "DataStore.hpp"
 #include <ctime>
-using namespace pqxx;
-using namespace table;
 #include <string>
 #include <iostream>
 
 
 namespace store {
 using namespace pqxx;
+using namespace table;
 
 DataStore::DataStore(){}
 
@@ -30,7 +29,7 @@ void DataStore::setConnectionString(const std::string &connection){
 }
 
 /*execute sql statement from web service*/
-Table DataStore::execQuery(std::string sql){
+Table DataStore::execQuery(const std::string & sql) const{
     connection conn(connectionString);
 
     if(!conn.is_open()){

@@ -10,9 +10,10 @@
 #include <pqxx/pqxx>
 #include "Table.hpp"
 #include <string>
+
+namespace store {
 using namespace table;
 using namespace pqxx;
-namespace store {
 
 
 class DataStore{
@@ -21,7 +22,7 @@ private:
 public:
     DataStore();
     DataStore(const string & connection);
-    Table execQuery(string sql);
+    Table execQuery(const string & sql) const;
     void setConnectionString(const string & connection);
     vector<string> getAllTables();
     std::tuple<bool,string,string> relatedTable(string &tableName,string &columnName);

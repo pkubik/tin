@@ -11,6 +11,7 @@
 #include <sstream>
 
 using namespace server;
+using namespace table;
 
 FancyHandler::FancyHandler()
     : dataBase("")
@@ -136,33 +137,51 @@ Response FancyHandler::handleSuccessTable(const Request& request, std::string me
 
 Response FancyHandler::handleSuccessMain(const Request& request) const {
     Response response;
+    std::ostringstream msgStream;
 
-    response.code = 200;
-    response.headers["Content-Type"] = "text/html";
-
-    NL::Template::LoaderFile loader; // Let's use the default loader that loads files from disk.
+    NL::Template::LoaderFile loader;
 
     NL::Template::Template t( loader );
 
-    t.load( "res/templates/main.html" );               // Load & parse the main template and its dependencies.
-    t.block( "table" ).repeat( 2 );     // We need to know in advance that the "items" block will repeat 3 times.
+    t.load( "res/templates/main.html" );
+    t.set("res_dir", "/home/patryk/git/tin/build");
+    t.set("title", "Lista wszystkich tabel");
+    t.set("head_title", "Lista wszystkich tabel");
+    std::string sql = "select distinct "
+    		"table_name, "
+    		"count(*) over (partition by table_name) as column_count "
+    		"from information_schema.columns "
+    			"where table_schema='public' "
+    			"order by table_name asc;";
+    Table result = dataBase.execQuery(sql);
 
-    std::string sql = "Select table_name from information_schema.tables where table_schema='public'";
-    std::ostringstream msgStream;
-/* Create a non-transactional object. */
-	pqxx::connection conn("user=tin host=czadzik24.pl port=5432 password=haslo dbname=tin");
-	pqxx::nontransaction N(conn);
+    int size = result.tableSize();
+    int col_num = result.rowSize();
 
-/* Execute SQL query */
-	pqxx::result R( N.exec( sql ));
-	int i=0;
-	for (pqxx::result::const_iterator c=R.begin(); c!=R.end();++c) {
-		t.block( "table" )[ i ].set("name", c[0].as<std::string>());
-		++i;
+    t.block( "row" ).repeat( size );
+    t.block( "header_col" ).repeat( col_num );
+    /* fill header row fields */
+	for (int j=0; j < col_num;++j) {
+		t.block("header_col")[j].set("field", result.getColumnsNames()[j]);
 	}
-	conn.disconnect ();
-    t.render( msgStream ); // Render the template with the variables we've set above
+
+    NL::Template::Block & block = t.block( "row" );
+    /* fill remaining rows */
+	for (int i=0;i<size;++i) {
+
+		block[i].block( "col" ).repeat( col_num );
+		/* fill columns in a specific row */
+		for (int j=0; j < col_num;++j) {
+			block[i].block("col")[j].set("field", result.getRow(i)[j]);
+
+		}
+	}
+    t.render( msgStream );
+
     response.message=msgStream.str();
+    response.code = 200;
+    response.headers["Content-Type"] = "text/html";
+
     return response;
 }
 
