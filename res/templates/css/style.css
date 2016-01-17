@@ -1,0 +1,10 @@
+td th {
+	width: 150px;
+}
+table tr th td {
+	border-width: 3px;
+	border-color: red;
+}
+table {
+	widht:90%;
+}
