@@ -63,4 +63,9 @@ private:
      * Checks if the client accepts HTML response.
      */
     bool acceptsHtml(const Request& request) const ;
+
+    /*
+     * Helper function. Sets some template variables to specific values.
+     */
+    void setFooterTemplate(const NL::Template::Template & t, const string & base_url, const int pgSize, const int pgNum, const bool isLastPage) const;
 };

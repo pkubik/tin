@@ -3,11 +3,11 @@
 
 <div class="row">
 <div class="col-md-2">
-<a class="btn btn-default btn-lg btn-block" href="{{ alltable_path }}">
+<a class="btn btn-default btn-lg btn-block" href="/alltables?pgsize={{ pgsize }}&pgnum=0">
     <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><br/>
-    {{ alltable_description }}
+    All Tables
 </a>
-<a class="btn btn-default btn-lg btn-block" href="{{ table_path }}">
+<a class="btn btn-default btn-lg btn-block" href="/?table={{ table_name }}&pgsize={{ pgsize }}&pgnum=0">
     <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><br/>
     {{ table_description }}
 </a>

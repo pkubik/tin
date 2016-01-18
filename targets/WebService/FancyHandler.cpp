@@ -135,7 +135,7 @@ Response FancyHandler::handle404Error(const Request& request) const {
 Response FancyHandler::handleFetchResource(const Request& request, const std::string& path) const {
     Response response;
     std::string content_type = path.substr(path.find_last_of(".")+1);
-    LOGT("Sciezka: "+path+", typ: "+content_type);
+    LOGD("Sciezka: "+path+", typ: "+content_type);
     if (content_type!="js" and content_type!="css")
     	return FancyHandler::handleRequestError("No such file or directory.");
 
@@ -159,11 +159,11 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     t.load( configuration.getRootResDir()+"templates/detail.html" );
 
     t.set("rootResDir", configuration.getRootResDir());
-    t.set("head_title", "Details for table \"" + tableName + "\"");
+    t.set("head_title", "Details for table " + tableName);
     t.set("title", tableName);
-    t.set("alltable_path","/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
-    t.set("alltable_description", "All Tables");
-    t.set("table_path", "/?table="+tableName+"&pgsize="+configuration.getPageSize()+"&pgnum=0");
+    t.set("pgsize", configuration.getPageSize());
+    t.set("pgnum", "0");
+    t.set("table_name",tableName);
     t.set("table_description", tableName);
 
 	t.block("prev_btn").disable();
@@ -172,8 +172,8 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     std::string columnName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
     auto it = request.getParameters().find(columnName);
     std::string columnValue = it->second;
-    std::string sql = "select * from " + tableName + " where " + columnName + " = \'" + columnValue + "\';";
-    Table result = dataBase.execQuery(sql);
+    std::string sql = "select * from " + tableName + " where " + columnName + " = \'" + columnValue + "\'";
+    Table result = dataBase.execSelect(sql).second;
 
     int col_num = result.rowSize();
 
@@ -241,10 +241,10 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     
     std::tuple<bool,std::string,std::string> isFKcolumn[col_num];
     std::string pkColName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
-    LOGT("pkColName: " + pkColName);
+    LOGD("pkColName: " + pkColName);
     int pkColNum=-1;
     for (int i=0;i<=col_num;++i) {
-    	LOGT("pkColName search: " + result.getColumnsNames()[i]);
+    	LOGD("pkColName search: " + result.getColumnsNames()[i]);
     	if (result.getColumnsNames()[i] == pkColName) {
     		pkColNum = i;
     		break;
@@ -332,18 +332,10 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     int pgNum= -1;
     auto it_num = request.getParameters().find("pgnum");
     auto it_size = request.getParameters().find("pgsize");
-
-
 	if (it_num != request.getParameters().end() and it_size != request.getParameters().end()) {
 		pgSize = std::stoi(it_size->second);
 		pgNum = std::stoi(it_num->second);
 	}
-	else {
-		t.block("prev_btn").disable();
-		t.block("next_btn").disable();
-	}
-	t.block("prev_btn").set("prev_url","/alltables?pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum-1));
-	t.block("next_btn").set("next_url","/alltables?pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum+1));
 
 	std::vector<string> orderByColNames = std::vector<string>();
 	orderByColNames.push_back("table_name");
@@ -352,36 +344,34 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     Table result = resultPair.second;
     bool isLastPage = resultPair.first;
 
-    if (pgNum<=0 )
-    	t.block("prev_btn").disable();
-	if (isLastPage)
-		t.block("next_btn").disable();
+    setFooterTemplate(t, "/alltables", pgSize,pgNum,isLastPage);
+    LOGD("za footerem");
 
     int size = result.tableSize();
+    LOGD("size: "+std::to_string(size));
 
-    t.block( "row" ).repeat( size );
-    t.block( "header_col" ).repeat( 2 );
 
     /* fill header row fields */
+    t.block( "header_col" ).repeat( 2 );
 	t.block("header_col")[0].set("field", "Table Name");
 	t.block("header_col")[1].set("field", "Column count");
 
+	t.block( "row" ).repeat( size );
     if (size != 0) {
     	NL::Template::Block & block = t.block( "row" );
+    	std::string pgSizeStr = configuration.getPageSize();
 		/* fill remaining rows */
 		for (int i=0;i<size;++i) {
-
-			block[i].block( "col" ).repeat( 2 );
 			/* fill columns in a specific row */
-			block[i].block("col")[0].set("field", "<a href=\"/?table=" + result.getRow(i)[0]
-						+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to "
-						+ result.getRow(i)[0] +" table\">"+result.getRow(i)[0]+"</a>");
-			block[i].block("col")[1].set("field", result.getRow(i)[1]);
-
+			block[i].set("pgsize", pgSizeStr);
+			block[i].set("table_name", result.getRow(i)[0]);
+			block[i].set("table_count", result.getRow(i)[1]);
+			LOGD("w FOR: "+result.getRow(i)[0]+" "+result.getRow(i)[1]);
 		}
     }
+    LOGD("za forem");
     t.render( msgStream );
-
+    LOGD("za renderem");
     response.message=msgStream.str();
     response.code = 200;
     response.headers["Content-Type"] = "text/html";
@@ -470,4 +460,22 @@ bool FancyHandler::acceptsHtml(const Request& request) const {
 store::DataStore& FancyHandler::getDataBase()
 {
     return dataBase;
+}
+
+void FancyHandler::setFooterTemplate(const NL::Template::Template & t, const std::string & base_url, const int pgSize, const int pgNum, const bool isLastPage) const {
+//	NL::Template::Block prev_block = t.block("prev_btn");
+//	NL::Template::Block next_block = t.block("next_btn");
+
+	t.block("prev_btn").set("base_url", base_url);
+	t.block("prev_btn").set("pgsize", std::to_string(pgSize));
+	t.block("prev_btn").set("pgnum",std::to_string(pgNum-1));
+
+	t.block("next_btn").set("base_url", base_url);
+	t.block("next_btn").set("pgsize", std::to_string(pgSize));
+	t.block("next_btn").set("pgnum",std::to_string(pgNum+1));
+
+    if (pgNum<=0 )
+    	t.block("prev_btn").disable();
+	if (isLastPage or pgSize<0)
+		t.block("next_btn").disable();
 }

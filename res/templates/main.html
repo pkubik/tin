@@ -7,7 +7,13 @@
 	    <div class="panel-heading text-center text-uppercase lead">{{ title }}</div>
 		<table class="table table-bordered table-hover">
 		<tr>{% block header_col %}<th>{{ field }}</th>{% endblock %}</tr>
-		{% block row %}<tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>{% endblock %}
+		{% block row %}
+		<tr>
+		  <td><a href="/?table={{ table_name }}&pgsize={{ pgsize }}&pgnum=0">{{ table_name }}</a>
+	      </td>
+	      <td>{{ table_count }}</td>
+	    </tr>
+		{% endblock %}
 	    </table>
     </div>
 </div>
