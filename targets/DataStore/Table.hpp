@@ -26,6 +26,7 @@ public:
     vector<string> getColumnsNames();
     vector<string> getRow(int i);
     void addRow(vector<std::string> &row);
+    void delRow(int i);
     void addColumnName(string columName);
 };
 

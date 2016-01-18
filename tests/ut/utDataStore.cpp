@@ -32,7 +32,12 @@ TEST_CASE( "Test tables' info accessing", "[DataStore]" ) {
     CHECK(ds.getPrimaryKeyColumnName(testTableNames[1])[0] == "student_id");
 
     //access to related table by FK
-    //CHECK(ds.relatedTable("students","gr"))
+    //string testTableName=;
+    //string testColumnName=
+    std::tuple<bool,string,string> testTuplet(true,"groups","group_id");
+    CHECK(ds.relatedTable("students","group_id") == testTuplet);
+    std::tuple<bool,string,string> testTuplet2(false,"","");
+    CHECK(ds.relatedTable("students","student_id") == testTuplet2);
 
 
 }

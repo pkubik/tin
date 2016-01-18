@@ -148,7 +148,7 @@ vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableN
 
 }
 /*execute select query in optional order with optional pagination*/
-Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pageSize, int pageNr){
+std::pair<bool,Table> DataStore::execSelect(const std::string &sql, vector<std::string> order, int pageSize, int pageNr) const{
     connection conn(connectionString);
 
     if(!conn.is_open()){
@@ -170,7 +170,7 @@ Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pag
 
     //if pagination required
     if(pageSize>0 && pageNr>=0){
-        select += " limit " + to_string(pageSize) + " offset " + to_string(pageSize*pageNr);
+        select += " limit " + to_string(pageSize+1) + " offset " + to_string(pageSize*pageNr);
     }
     //if pagination arguments are invalid
     else if(pageSize!=-1 || pageNr!=-1){
@@ -178,13 +178,19 @@ Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pag
     }
 
     Table resultTable;
+    bool isLastTable = false;
     try{
 
         result queryResult( N.exec(select));
 
-        //filling resultTable
+        //getting column names
+        for(size_t i=0 ; i<queryResult.columns();++i){
+            resultTable.addColumnName(queryResult.column_name(i));
+        }
+
+         //filling resultTable
         for (result::const_iterator row = queryResult.begin();
-             row != queryResult.end();
+             row !=queryResult.end() ;
              ++row)
         {
             //filling resultTable's row
@@ -193,14 +199,8 @@ Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pag
                  field != row->end();
                  ++field)
             {
+
                 tableRow.push_back(field->c_str());
-
-                //if first iteration get column names
-                if(row == queryResult.begin())
-                {
-                    resultTable.addColumnName(field->name());
-
-                }
             }
 
             resultTable.addRow(tableRow);
@@ -213,6 +213,11 @@ Table DataStore::execSelect(std::string &sql, vector<std::string> order, int pag
     catch(std::exception& e){
         throw std::runtime_error("Invalid query");
     }
-    return resultTable;
+    if(resultTable.tableSize()<=(size_t)pageSize){
+        isLastTable=true;
+    }else{
+        resultTable.delRow(resultTable.tableSize()-1);
+    }
+    return std::make_pair(isLastTable,resultTable);
 }
 }

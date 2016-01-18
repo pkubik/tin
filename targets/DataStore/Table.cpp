@@ -29,6 +29,13 @@ void Table::addRow(vector<std::string> &row){
     ++rowCount;
     queryResult.push_back(row);
 }
+/*removes selected row*/
+void Table::delRow(int i){
+    --rowCount;
+    queryResult.erase(queryResult.begin() + i);
+
+}
+
 /*adds column name*/
 void Table::addColumnName(std::string columName){
     ++columnCount;
