@@ -216,20 +216,20 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 		t.block("prev_btn").disable();
 		t.block("next_btn").disable();
 	}
-
-	if (pgNum<=0 )
-		t.block("prev_btn").disable();
-	if (false)
-		t.block("next_btn").disable();
-
 	t.block("prev_btn").set("prev_url","/?table="+tableName+"&pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum-1));
 	t.block("next_btn").set("next_url","/?table="+tableName+"&pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum+1));
 
 
 	const std::vector<std::string> pkNames = dataBase.getPrimaryKeyColumnName(tableName);
 
-    //std::pair<bool,Table> resultPair = dataBase.execSelect(sql,pkNames, pgSize,pgNum);
-    Table result = dataBase.execSelect(sql,pkNames, pgSize,pgNum);
+    std::pair<bool,Table> resultPair = dataBase.execSelect(sql,pkNames, pgSize,pgNum);
+    Table result = resultPair.second;
+    bool isLastPage = resultPair.first;
+
+    if (pgNum<=0 )
+    	t.block("prev_btn").disable();
+	if (isLastPage)
+		t.block("next_btn").disable();
 
     int size = result.tableSize();
     int col_num = result.rowSize();
@@ -331,24 +331,23 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 		t.block("prev_btn").disable();
 		t.block("next_btn").disable();
 	}
-	if (pgNum<=0 )
-		t.block("prev_btn").disable();
-	if (false)
-		t.block("next_btn").disable();
-
-
 	t.block("prev_btn").set("prev_url","/alltables?pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum-1));
 	t.block("next_btn").set("next_url","/alltables?pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum+1));
 
 	std::vector<string> orderByColNames = std::vector<string>();
 	orderByColNames.push_back("table_name");
 
-	Table result = dataBase.execSelect(sql,orderByColNames,pgSize,pgNum);
+    std::pair<bool,Table> resultPair = dataBase.execSelect(sql,orderByColNames, pgSize,pgNum);
+    Table result = resultPair.second;
+    bool isLastPage = resultPair.first;
+
+    if (pgNum<=0 )
+    	t.block("prev_btn").disable();
+	if (isLastPage)
+		t.block("next_btn").disable();
+
     int size = result.tableSize();
     int col_num = result.rowSize();
-
-
-
 
 
     t.block( "row" ).repeat( size );
