@@ -46,96 +46,89 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
         return handleSuccessEcho(request);
     }
     
-    std::string alltables = "/alltables";
-    if (request.getResource().compare(0, alltables.length(), alltables) == 0) {
-        return handleSuccessMain(request); // startingTabel puste
-    }
-    /*
-     * W pierwszej kolejnosci sprawdzamy czy uzytkownik wszedl w 'Strone glowna' czli /
-     * czy moze zapytanie ma parametry.
-     * Sprawdzenie czy w pliku config.ini podano tabele startowa.
-     * Jeśli nie podano to wywolujemy handleSuccessMain ktory wypisuje liste dostepnych tabel
-     * 
-     * Jesli podano to przechodzimy do wyswietlenia poczatkowej zawartosci konkretnej tabeli.
-     * 
-     */ 
+    try
+    {
+        
+        std::string alltables = "/alltables";
+        if (request.getResource().compare(0, alltables.length(), alltables) == 0) {
+            return handleSuccessMain(request); // startingTabel puste
+        }
+        /*
+         * W pierwszej kolejnosci sprawdzamy czy uzytkownik wszedl w 'Strone glowna' czli /
+         * czy moze zapytanie ma parametry.
+         * Sprawdzenie czy w pliku config.ini podano tabele startowa.
+         * Jeśli nie podano to wywolujemy handleSuccessMain ktory wypisuje liste dostepnych tabel
+         * 
+         * Jesli podano to przechodzimy do wyswietlenia poczatkowej zawartosci konkretnej tabeli.
+         * 
+         */ 
+        
+        std::string main = "/";
+        if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
+            auto itTable = request.getParameters().find("table");
+            if(request.getParameters().end() != itTable) // czy jest parametr table
+            {
+                auto pkVector = dataBase.getPrimaryKeyColumnName(itTable->second);
+                auto namePk = pkVector.front();
+                auto itPk = request.getParameters().find(namePk);
+                if(request.getParameters().end() != itPk) // czy jest parametr klucza glownego
+                {
+                    return handleSuccessDetails(request, itTable->second); // pokazanie widoku detlicznego
+                }
+                else
+                {
+                    return handleSuccessTable(request, itTable->second); // pokazanie tabeli
+                }
+                
+            }
+            else
+            {
+                if(configuration.getStartingTable() == "") //co przewiduje config.ini
+                {
+                    return handleSuccessMain(request); // startingTabel puste
+                }
+                else
+                {
+                    std::string table = configuration.getStartingTable();
+                    return handleSuccessTable(request, table); // pokazanie startingTable
+                }
+            }
+        }
     
-    std::string main = "/";
-    if (request.getResource().compare(0, echo.length(), main) == 0) { // czy '/'
-        auto itTable = request.getParameters().find("table");
-        if(request.getParameters().end() != itTable) // czy jest parametr table
-        {
-            auto fkVector = dataBase.getPrimaryKeyColumnName(itTable->second);
-            auto nameFk = fkVector.front();
-            auto itFk = request.getParameters().find(nameFk);
-            if(request.getParameters().end() != itFk) // czy jest parametr klucza obcego
-            {
-                return handleSuccessDetails(request, itTable->second); // pokazanie widoku detlicznego
-            }
-            else
-            {
-                return handleSuccessTable(request, itTable->second); // pokazanie tabeli
-            }
-            
-        }
-        else
-        {
-            if(configuration.getStartingTable() == "") //co przewiduje config.ini
-            {
-                return handleSuccessMain(request); // startingTabel puste
-            }
-            else
-            {
-                std::string table = configuration.getStartingTable();
-                return handleSuccessTable(request, table); // pokazanie startingTable
-            }
-        }
+    }
+    catch (const std::exception &ex)
+    {
+        return handle404Error(request);
     }
      
      return handle404Error(request);
 }
 
-// internal handlers not required by the server API
-server::Response FancyHandler::handleRequestError() const {
-    Response response;
-
-    response.code = 400;
-    response.headers["Content-Type"] = "text/plain";
-    response.message = "Invalid request.";;
-
-    return response;
-}
-
-Response FancyHandler::handleGeneralError(const Request& request) const {
-    Response response;
-
-    response.code = 400;
-
-    constexpr auto message = "Invalid request.";
-    fillSimpleResponse(response, request, message);
-
-    return response;
-}
-
 Response FancyHandler::handle404Error(const Request& request) const {
+
     Response response;
+    std::ostringstream msgStream;
+    NL::Template::LoaderFile loader;
+    NL::Template::Template t( loader );
+    t.load( configuration.getRootResDir()+"templates/404.html" );
 
-    response.code = 404;
+    t.set("rootResDir", configuration.getRootResDir());
+    t.set("head_title", "404 Not Found");
+    t.set("title", "404 Not Found");
+    t.set("alltable_path","/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
+    t.set("alltable_description", "All Tables");
+    t.set("table_description", "Refresh");
 
-    constexpr auto message = "Requested resource not found.";
-    fillSimpleResponse(response, request, message);
+    t.block("prev_btn").disable();
+    t.block("next_btn").disable();
 
-    return response;
-}
+    t.set("message", "The requested URL "+ request.getResource() +" was not found on this server.");
+    t.render( msgStream );
 
-Response FancyHandler::handleSuccessEcho(const Request& request) const {
-    Response response;
-
+    response.message=msgStream.str();
     response.code = 200;
-    constexpr char echo[] = "/echo/";
-
-    fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
-
+    response.headers["Content-Type"] = "text/html";
+    
     return response;
 }
 
@@ -160,7 +153,7 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
     t.load( configuration.getRootResDir()+"templates/detail.html" );
 
     t.set("rootResDir", configuration.getRootResDir());
-    t.set("head_title", "Widok detaliczny na tabeli \"" + tableName + "\"");
+    t.set("head_title", "Details for table \"" + tableName + "\"");
     t.set("title", tableName);
     t.set("alltable_path","/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
     t.set("alltable_description", "All Tables");
@@ -203,7 +196,7 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     t.load( configuration.getRootResDir()+"templates/table.html" );
     t.set("rootResDir", configuration.getRootResDir());
     t.set("title", tableName);
-    t.set("head_title", "Tabela \"" + tableName + "\"");
+    t.set("head_title", "Table \"" + tableName + "\"");
     t.set("table_path", "/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
     t.set("table_description", "All Tables");
     std::string sql = "select * from " + tableName;
@@ -260,8 +253,9 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
         isFKcolumn[j] = dataBase.relatedTable(tableName, colName);
         if(std::get<0>(isFKcolumn[j]))
         {
-            std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j])
-            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0>" + colName + "</a>";
+            std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j])
+            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to "
+            		+ std::get<1>(isFKcolumn[j]) +" table\">" + colName + "</a>";
             t.block("header_col")[j].set("field", link);
         }
         else
@@ -282,13 +276,15 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 				auto cell = result.getRow(i)[j];
 				if(std::get<0>(isFKcolumn[j]))
 				{
-					std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0>" + cell + "</a>";
+					std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to details in "
+							+ std::get<1>(isFKcolumn[j]) +" table\">" + cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
 				else if (pkColNum == j) {
-					std::string link = "<a href=/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0>" + cell + "</a>";
+					std::string link = "<a href=\"/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to details\">"
+							+ cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
 				else
@@ -317,8 +313,8 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 
     t.load( configuration.getRootResDir()+"templates/main.html" );
     t.set("rootResDir", configuration.getRootResDir());
-    t.set("title", "Lista wszystkich tabel");
-    t.set("head_title", "Lista wszystkich tabel");
+    t.set("title", "List of all tables");
+    t.set("head_title", "List of all tables");
     std::string sql = "select distinct "
     		"table_name, "
     		"count(*) over (partition by table_name) as column_count "
@@ -356,8 +352,6 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 		t.block("next_btn").disable();
 
     int size = result.tableSize();
-    int col_num = result.rowSize();
-
 
     t.block( "row" ).repeat( size );
     t.block( "header_col" ).repeat( 2 );
@@ -373,8 +367,9 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 
 			block[i].block( "col" ).repeat( 2 );
 			/* fill columns in a specific row */
-			block[i].block("col")[0].set("field", "<a href=/?table=" + result.getRow(i)[0]
-						+"&pgsize="+configuration.getPageSize()+"&pgnum=0>"+result.getRow(i)[0]+"</a>");
+			block[i].block("col")[0].set("field", "<a href=\"/?table=" + result.getRow(i)[0]
+						+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to "
+						+ result.getRow(i)[0] +" table\">"+result.getRow(i)[0]+"</a>");
 			block[i].block("col")[1].set("field", result.getRow(i)[1]);
 
 		}
@@ -384,6 +379,40 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     response.message=msgStream.str();
     response.code = 200;
     response.headers["Content-Type"] = "text/html";
+
+    return response;
+}
+
+
+Response FancyHandler::handleSuccessEcho(const Request& request) const {
+    Response response;
+
+    response.code = 200;
+    constexpr char echo[] = "/echo/";
+
+    fillSimpleResponse(response, request, request.getResource().substr(sizeof(echo) - 1));
+
+    return response;
+}
+
+// internal handlers not required by the server API
+server::Response FancyHandler::handleRequestError() const {
+    Response response;
+
+    response.code = 400;
+    response.headers["Content-Type"] = "text/plain";
+    response.message = "Invalid request.";;
+
+    return response;
+}
+
+Response FancyHandler::handleGeneralError(const Request& request) const {
+    Response response;
+
+    response.code = 400;
+
+    constexpr auto message = "Invalid request.";
+    fillSimpleResponse(response, request, message);
 
     return response;
 }
