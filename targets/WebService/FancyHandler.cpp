@@ -161,8 +161,14 @@ Response FancyHandler::handleSuccessDetails(const Request& request, const std::s
 
     t.set("rootResDir", configuration.getRootResDir());
     t.set("head_title", "Widok detaliczny na tabeli \"" + tableName + "\"");
-    t.set("table_path", "/?table="+tableName);
-    t.set("table_description", "Cała tabela "+tableName);
+    t.set("title", tableName);
+    t.set("alltable_path","/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
+    t.set("alltable_description", "All Tables");
+    t.set("table_path", "/?table="+tableName+"&pgsize="+configuration.getPageSize()+"&pgnum=0");
+    t.set("table_description", tableName);
+
+	t.block("prev_btn").disable();
+	t.block("next_btn").disable();
 
     std::string columnName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
     auto it = request.getParameters().find(columnName);
@@ -196,10 +202,10 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
    
     t.load( configuration.getRootResDir()+"templates/table.html" );
     t.set("rootResDir", configuration.getRootResDir());
-    t.set("title", "Tabela \"" + tableName + "\"");
+    t.set("title", tableName);
     t.set("head_title", "Tabela \"" + tableName + "\"");
-    t.set("table_path", "/alltables");
-    t.set("table_description", "Wszystkie tabele");
+    t.set("table_path", "/alltables?pgsize="+configuration.getPageSize()+"&pgnum=0");
+    t.set("table_description", "All Tables");
     std::string sql = "select * from " + tableName;
 
     int pgSize = -1;
@@ -254,7 +260,8 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
         isFKcolumn[j] = dataBase.relatedTable(tableName, colName);
         if(std::get<0>(isFKcolumn[j]))
         {
-            std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + ">" + colName + "</a>";
+            std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j])
+            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0>" + colName + "</a>";
             t.block("header_col")[j].set("field", link);
         }
         else
@@ -275,11 +282,13 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 				auto cell = result.getRow(i)[j];
 				if(std::get<0>(isFKcolumn[j]))
 				{
-					std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell +">" + cell + "</a>";
+					std::string link = "<a href=/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0>" + cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
 				else if (pkColNum == j) {
-					std::string link = "<a href=/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell +">" + cell + "</a>";
+					std::string link = "<a href=/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0>" + cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
 				else
@@ -357,16 +366,19 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 	t.block("header_col")[0].set("field", "Table Name");
 	t.block("header_col")[1].set("field", "Column count");
 
-    NL::Template::Block & block = t.block( "row" );
-    /* fill remaining rows */
-	for (int i=0;i<size;++i) {
+    if (size != 0) {
+    	NL::Template::Block & block = t.block( "row" );
+		/* fill remaining rows */
+		for (int i=0;i<size;++i) {
 
-		block[i].block( "col" ).repeat( 2 );
-		/* fill columns in a specific row */
-		block[i].block("col")[0].set("field", "<a href=/?table=" + result.getRow(i)[0]+">"+result.getRow(i)[0]+"</a>");
-		block[i].block("col")[1].set("field", result.getRow(i)[1]);
+			block[i].block( "col" ).repeat( 2 );
+			/* fill columns in a specific row */
+			block[i].block("col")[0].set("field", "<a href=/?table=" + result.getRow(i)[0]
+						+"&pgsize="+configuration.getPageSize()+"&pgnum=0>"+result.getRow(i)[0]+"</a>");
+			block[i].block("col")[1].set("field", result.getRow(i)[1]);
 
-	}
+		}
+    }
     t.render( msgStream );
 
     response.message=msgStream.str();

@@ -1,11 +1,25 @@
 {% include res/templates/header.html %}
 
 
-<table class="table table-bordered table-hover">
-<tr><th>Name</th><th>Value</th></tr>
-{% block row %}
-<tr><td>{{ colName }}</td><td>{{ colValue }}</td></tr>
-{% endblock %}
-</table>
-
+<div class="row">
+<div class="col-md-2">
+<a class="btn btn-default btn-lg btn-block" href="{{ alltable_path }}">
+    <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><br/>
+    {{ alltable_description }}
+</a>
+<a class="btn btn-default btn-lg btn-block" href="{{ table_path }}">
+    <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><br/>
+    {{ table_description }}
+</a>
+</div>
+<div class="col-md-8">
+    <div class="panel panel-default">
+        <div class="panel-heading text-center text-uppercase lead">{{ title }}</div>
+        <table class="table table-bordered table-hover">
+            <tr><th>Name</th><th>Value</th></tr>
+            {% block row %}<tr><td>{{ colName }}</td><td>{{ colValue }}</td></tr>{% endblock %}
+        </table>
+    </div>
+</div>
+</div>
 {% include res/templates/footer.html %}

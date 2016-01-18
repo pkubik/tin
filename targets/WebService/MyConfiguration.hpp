@@ -22,6 +22,7 @@ public:
     std::string getConnctionString();
     std::string getStartingTable() const;
     std::string getRootResDir() const;
+    std::string getPageSize() const;
 
 private:
     std::string configFile;
@@ -34,6 +35,7 @@ private:
     
     std::string rootResDir;
     std::string startingTable;
+    std::string pageSize;
 
     void findOption(std::string &option, std::string optionName);
     void findOption(int &option, std::string optionName);

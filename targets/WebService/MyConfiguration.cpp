@@ -27,6 +27,7 @@ void MyConfiguration::setConfiguration()
     findOption(dbname, "dbname");
     findOption(rootResDir, "rootResDir");
     findOption(startingTable, "startingTable");
+    findOption(pageSize, "pageSize");
 }
 
 void MyConfiguration::findOption(std::string &option, std::string optName)
@@ -89,4 +90,9 @@ std::string MyConfiguration::getStartingTable() const
 std::string MyConfiguration::getRootResDir() const
 {
     return rootResDir;
+}
+
+std::string MyConfiguration::getPageSize() const
+{
+    return pageSize;
 }
