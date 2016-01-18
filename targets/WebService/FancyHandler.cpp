@@ -26,7 +26,7 @@ Response FancyHandler::handle(const Request& request, RequestError error) {
 	LOGT("Echo handler handles request...");
 
     if (error != RequestError::NONE) {
-        return handleRequestError();
+        return handleRequestError("Invalid request");
     }
 
     if (request.getMethod() != Request::GET || request.getVersion() != "HTTP/1.1") {
@@ -134,12 +134,18 @@ Response FancyHandler::handle404Error(const Request& request) const {
 
 Response FancyHandler::handleFetchResource(const Request& request, const std::string& path) const {
     Response response;
+    std::string content_type = path.substr(path.find_last_of(".")+1);
+    LOGT("Sciezka: "+path+", typ: "+content_type);
+    if (content_type!="js" and content_type!="css")
+    	return FancyHandler::handleRequestError("No such file or directory.");
+
 
     std::ifstream in(configuration.getRootResDir()+path);
     std::string msg((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+
     response.message=msg;
     response.code = 200;
-    response.headers["Content-Type"] = "text/css";
+    response.headers["Content-Type"] = "text/"+content_type;
 
     return response;
 }
@@ -254,7 +260,7 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
         if(std::get<0>(isFKcolumn[j]))
         {
             std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j])
-            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to "
+            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to "
             		+ std::get<1>(isFKcolumn[j]) +" table\">" + colName + "</a>";
             t.block("header_col")[j].set("field", link);
         }
@@ -277,13 +283,13 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
 				if(std::get<0>(isFKcolumn[j]))
 				{
 					std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to details in "
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to details in "
 							+ std::get<1>(isFKcolumn[j]) +" table\">" + cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
 				else if (pkColNum == j) {
 					std::string link = "<a href=\"/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to details\">"
+							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to details\">"
 							+ cell + "</a>";
 					block[i].block("col")[j].set("field", link);
 				}
@@ -368,7 +374,7 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 			block[i].block( "col" ).repeat( 2 );
 			/* fill columns in a specific row */
 			block[i].block("col")[0].set("field", "<a href=\"/?table=" + result.getRow(i)[0]
-						+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Go to "
+						+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to "
 						+ result.getRow(i)[0] +" table\">"+result.getRow(i)[0]+"</a>");
 			block[i].block("col")[1].set("field", result.getRow(i)[1]);
 
@@ -396,12 +402,12 @@ Response FancyHandler::handleSuccessEcho(const Request& request) const {
 }
 
 // internal handlers not required by the server API
-server::Response FancyHandler::handleRequestError() const {
+server::Response FancyHandler::handleRequestError(const std::string & message) const {
     Response response;
 
     response.code = 400;
     response.headers["Content-Type"] = "text/plain";
-    response.message = "Invalid request.";;
+    response.message = message;
 
     return response;
 }

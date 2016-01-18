@@ -39,7 +39,7 @@ private:
     store::DataStore dataBase;
 
     // internal handlers not required by the server API
-    Response handleRequestError() const ;
+    Response handleRequestError(const std::string & message) const ;
     Response handleGeneralError(const Request& request) const ;
     Response handle404Error(const Request& request) const ;
     Response handleSuccessEcho(const Request& request) const ;
