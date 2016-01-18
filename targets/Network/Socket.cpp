@@ -247,7 +247,7 @@ unsigned short Socket::getPort() const
     }
 }
 
-size_t Socket::send(const void* bufferPtr, const size_t size) const
+size_t Socket::send(const void* bufferPtr, const size_t size)
 {
     int ret = ::send(mFD, bufferPtr, size, MSG_DONTWAIT);
     if (ret == -1) {
@@ -260,10 +260,15 @@ size_t Socket::send(const void* bufferPtr, const size_t size) const
         throw NetworkException(msg);
     }
 
+    if (ret == 0) {
+        // socket was closed by peer
+        close();
+    }
+
     return ret;
 }
 
-size_t Socket::receive(void* bufferPtr, const size_t size) const
+size_t Socket::receive(void* bufferPtr, const size_t size)
 {
     int ret = ::recv(mFD, bufferPtr, size, MSG_DONTWAIT);
     if (ret == -1) {
@@ -274,6 +279,11 @@ size_t Socket::receive(void* bufferPtr, const size_t size) const
         const std::string msg = "Socket receive error: " + getErrorMessage();
         LOGE(msg);
         throw NetworkException(msg);
+    }
+
+    if (ret == 0) {
+        // socket was closed by peer
+        close();
     }
 
     return ret;

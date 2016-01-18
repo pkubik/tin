@@ -35,7 +35,7 @@ public:
     {}
 
     virtual int read(char* buffer, size_t length) {
-        auto ret = abortableRead(socket, buffer, length, pipeEnd);
+        auto ret = abortableRead(socket, buffer, length, pipeEnd, 5000);
 
         if (ret.second) {
             return 0;
@@ -95,16 +95,22 @@ void Worker::handle() {
     SourceWrapper source(connection, pipe[0]);
     BufferedInput input(source, 100);
     auto result = http::Parser::parse(input);
+
+    if (connection.getType() == Socket::Type::INVALID) {
+        // socket is closed
+        return;
+    }
+
     if (!result.second) {
         LOGW("Received invalid request.");
         const auto& response = pool.handler.handle(result.first, RequestError::PARSE);
         const auto& responseText = http::Generator::generate(response);
-        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0]);
+        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0], 5000);
     } else {
         LOGT("Handling request...");
         const auto& response = pool.handler.handle(result.first, RequestError::NONE);
         const auto& responseText = http::Generator::generate(response);
-        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0]);
+        abortableWriteAll(connection, responseText.c_str(), responseText.length(), pipe[0], 5000);
     }
 
     connection.close();

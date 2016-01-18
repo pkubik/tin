@@ -27,8 +27,11 @@ public:
     vector<string> getAllTables();
     std::tuple<bool,string,string> relatedTable(const string &tableName,const string &columnName) const;
     vector<std::string> getPrimaryKeyColumnName(const std::string &tableName) const;
+<<<<<<< HEAD
     std::pair<bool,Table> execSelect(const std::string &sql, vector<std::string> order = vector<string>(), int pageSize = -1, int pageNr = -1) const;
-
+=======
+    Table execSelect(const std::string &sql, vector<std::string> order = vector<string>(), int pageSize = -1, int pageNr = -1) const;
+>>>>>>> 2d70087cd78488ed74103ab17c5ffa0968d83469
 
 };
 }

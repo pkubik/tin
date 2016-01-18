@@ -2,10 +2,11 @@
 
 
 <table>
-<tr>{% block header_col %}<th style="width:100px; ">{{ field }}</th>{% endblock %}</tr>
+<tr>{% block header_col %}<th>{{ field }}</th>{% endblock %}</tr>
 {% block row %}
 <tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>
 {% endblock %}
 </table>
-
+{% block prev_btn %} <a href="{{ prev_url }}">PREVIOUS PAGE</a>{% endblock %}
+{% block next_btn %} <a href="{{ next_url }}">NEXT PAGE</a>{% endblock %}
 {% include res/templates/footer.html %}
