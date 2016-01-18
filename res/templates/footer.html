@@ -1,6 +1,6 @@
 <div id="buttons" class="row">
-<div class="col-md-2 col-md-offset-2 col-sm-6">{% block prev_btn %} <a class="btn btn-default btn-block" href="{{ base_url }}?pgsize={{ pgsize }}&pgnum={{ pgnum }}"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span>PREVIOUS PAGE</a>{% endblock %}</div>
-<div class="col-md-2 col-md-offset-4 col-sm-6">{% block next_btn %}<a class="btn btn-default btn-block" href="{{ base_url }}?pgsize={{ pgsize }}&pgnum={{ pgnum }}">NEXT PAGE<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a>{% endblock %}</div>
+<div class="col-md-2 col-md-offset-2 col-sm-6">{% block prev_btn %} <a class="btn btn-default btn-block" href="{{ base_url }}pgsize={{ pgsize }}&pgnum={{ pgnum }}"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span>PREVIOUS PAGE</a>{% endblock %}</div>
+<div class="col-md-2 col-md-offset-4 col-sm-6">{% block next_btn %}<a class="btn btn-default btn-block" href="{{ base_url }}pgsize={{ pgsize }}&pgnum={{ pgnum }}">NEXT PAGE<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a>{% endblock %}</div>
 </div>
 </body>
 <!-- Latest compiled and minified JavaScript -->

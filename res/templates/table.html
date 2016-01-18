@@ -11,11 +11,33 @@
 	<div class="panel panel-default">
 	  <div class="panel-heading text-center text-uppercase lead">{{ title }}</div>
 		<table class="table table-bordered table-hover">
-		<tr>{% block header_col %}<th>{{ field }}</th>{% endblock %}</tr>
-		{% block row %}<tr>{% block col %}<td>{{ field }}</td>{% endblock %}</tr>{% endblock %}
+		<tr>
+		{% block header_col %}
+		    {% block header_simple_col %}<th>{{ field }}</th>{% endblock %}
+            {% block header_link %}<th><a href="/?table={{ trg_table_name }}&pgsize={{ pgsize }}&pgnum=0" 
+                                   data-toggle="tooltip" 
+                                   data-placement="right" 
+                                   title="Go to {{ trg_table_name }} table">{{ field }}</a></th>
+            {% endblock %}
+        {% endblock %}
+        </tr>
+		{% block row %}
+		  <tr>
+          {% block col %}
+                   {% block simple_val %}<td>{{ field }}</td>{% endblock %}
+                   {% block link %}<td><a href="/?table={{ trg_table_name }}&{{ trg_col_name }}={{ trg_col_value }}&pgsize={{ pgsize }}&pgnum=0" 
+                                          data-toggle="tooltip" 
+                                          data-placement="right" 
+                                          title="Go to {{ trg_table_name }} table">{{ field }}</a></td>
+                   {% endblock %}
+          {% endblock %}
+          </tr>
+		{% endblock %}
 		</table>
 	  </div>
 	</div>
 </div>
 </div>
 {% include res/templates/footer.html %}
+
+

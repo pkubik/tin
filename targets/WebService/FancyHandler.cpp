@@ -212,18 +212,10 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     auto it_num = request.getParameters().find("pgnum");
     auto it_size = request.getParameters().find("pgsize");
 
-
 	if (it_num != request.getParameters().end() and it_size != request.getParameters().end()) {
 		pgSize = std::stoi(it_size->second);
 		pgNum = std::stoi(it_num->second);
 	}
-	else {
-		t.block("prev_btn").disable();
-		t.block("next_btn").disable();
-	}
-	t.block("prev_btn").set("prev_url","/?table="+tableName+"&pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum-1));
-	t.block("next_btn").set("next_url","/?table="+tableName+"&pgsize="+std::to_string(pgSize)+"&pgnum="+std::to_string(pgNum+1));
-
 
 	const std::vector<std::string> pkNames = dataBase.getPrimaryKeyColumnName(tableName);
 
@@ -231,20 +223,16 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     Table result = resultPair.second;
     bool isLastPage = resultPair.first;
 
-    if (pgNum<=0 )
-    	t.block("prev_btn").disable();
-	if (isLastPage)
-		t.block("next_btn").disable();
+    setFooterTemplate(t, "/?table="+tableName+"&", pgSize,pgNum,isLastPage);
 
     int size = result.tableSize();
     int col_num = result.rowSize();
     
     std::tuple<bool,std::string,std::string> isFKcolumn[col_num];
     std::string pkColName = *(dataBase.getPrimaryKeyColumnName(tableName).begin());
-    LOGD("pkColName: " + pkColName);
+
     int pkColNum=-1;
     for (int i=0;i<=col_num;++i) {
-    	LOGD("pkColName search: " + result.getColumnsNames()[i]);
     	if (result.getColumnsNames()[i] == pkColName) {
     		pkColNum = i;
     		break;
@@ -254,48 +242,53 @@ Response FancyHandler::handleSuccessTable(const Request& request, const std::str
     t.block( "header_col" ).repeat( col_num );
     /* fill header row fields */
     for (int j=0; j < col_num;++j) {
-        
         const std::string colName = result.getColumnsNames()[j];
         isFKcolumn[j] = dataBase.relatedTable(tableName, colName);
+        NL::Template::Block & colBlock = t.block( "header_col" );
         if(std::get<0>(isFKcolumn[j]))
         {
-            std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j])
-            		+ "&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to "
-            		+ std::get<1>(isFKcolumn[j]) +" table\">" + colName + "</a>";
-            t.block("header_col")[j].set("field", link);
+        	colBlock[j].block("header_simple_col").disable();
+        	colBlock[j].block("header_link").set("field", colName);
+        	colBlock[j].block("header_link").set("pgsize", std::to_string(pgSize));
+        	colBlock[j].block("header_link").set("trg_table_name", std::get<1>(isFKcolumn[j]));
         }
         else
         {
-            t.block("header_col")[j].set("field", colName);
+        	colBlock[j].block("header_link").disable();
+        	colBlock[j].block("header_simple_col").set("field", colName);
         }
-        
+
     }
     if (size != 0) {
     	NL::Template::Block & block = t.block( "row" );
 		/* fill remaining rows */
 		for (int i=0;i<size;++i) {
-
 			block[i].block( "col" ).repeat( col_num );
 
 			/* fill columns in a specific row */
 			for (int j=0; j < col_num;++j) {
 				auto cell = result.getRow(i)[j];
-				if(std::get<0>(isFKcolumn[j]))
-				{
-					std::string link = "<a href=\"/?table=" + std::get<1>(isFKcolumn[j]) + "&" + std::get<2>(isFKcolumn[j]) + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to details in "
-							+ std::get<1>(isFKcolumn[j]) +" table\">" + cell + "</a>";
-					block[i].block("col")[j].set("field", link);
+				NL::Template::Block & colBlock = block[i].block( "col" );
+				if(std::get<0>(isFKcolumn[j])) {
+					colBlock[j].block("simple_val").disable();
+					colBlock[j].block("link").set("field", cell);
+					colBlock[j].block("link").set("pgsize", std::to_string(pgSize));
+					colBlock[j].block("link").set("trg_table_name", std::get<1>(isFKcolumn[j]));
+					colBlock[j].block("link").set("trg_col_name", std::get<2>(isFKcolumn[j]));
+					colBlock[j].block("link").set("trg_col_value", cell);
 				}
 				else if (pkColNum == j) {
-					std::string link = "<a href=\"/?table=" + tableName + "&" + result.getColumnsNames()[j] + "="+ cell
-							+"&pgsize="+configuration.getPageSize()+"&pgnum=0\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"Go to details\">"
-							+ cell + "</a>";
-					block[i].block("col")[j].set("field", link);
+					colBlock[j].block("simple_val").disable();
+					colBlock[j].block("link").set("field", cell);
+					colBlock[j].block("link").set("pgsize", std::to_string(pgSize));
+					colBlock[j].block("link").set("trg_table_name", tableName);
+					colBlock[j].block("link").set("trg_col_name", result.getColumnsNames()[j]);
+					colBlock[j].block("link").set("trg_col_value", cell);
 				}
 				else
 				{
-					block[i].block("col")[j].set("field", cell);
+					colBlock[j].block("link").disable();
+					colBlock[j].block("simple_val").set("field", cell);
 				}
 			}
 		}
@@ -344,11 +337,9 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
     Table result = resultPair.second;
     bool isLastPage = resultPair.first;
 
-    setFooterTemplate(t, "/alltables", pgSize,pgNum,isLastPage);
-    LOGD("za footerem");
+    setFooterTemplate(t, "/alltables?", pgSize,pgNum,isLastPage);
 
     int size = result.tableSize();
-    LOGD("size: "+std::to_string(size));
 
 
     /* fill header row fields */
@@ -369,9 +360,7 @@ Response FancyHandler::handleSuccessMain(const Request& request) const {
 			LOGD("w FOR: "+result.getRow(i)[0]+" "+result.getRow(i)[1]);
 		}
     }
-    LOGD("za forem");
     t.render( msgStream );
-    LOGD("za renderem");
     response.message=msgStream.str();
     response.code = 200;
     response.headers["Content-Type"] = "text/html";
@@ -463,8 +452,6 @@ store::DataStore& FancyHandler::getDataBase()
 }
 
 void FancyHandler::setFooterTemplate(const NL::Template::Template & t, const std::string & base_url, const int pgSize, const int pgNum, const bool isLastPage) const {
-//	NL::Template::Block prev_block = t.block("prev_btn");
-//	NL::Template::Block next_block = t.block("next_btn");
 
 	t.block("prev_btn").set("base_url", base_url);
 	t.block("prev_btn").set("pgsize", std::to_string(pgSize));
