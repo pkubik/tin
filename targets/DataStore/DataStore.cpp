@@ -8,10 +8,6 @@
  */
 
 #include "DataStore.hpp"
-#include <ctime>
-#include <string>
-#include <iostream>
-#include <exception>
 
 
 namespace store {
@@ -22,7 +18,7 @@ using namespace table;
 DataStore::DataStore(){}
 
 DataStore::DataStore(const std::string &connection){
-   connectionString= connection;
+    connectionString= connection;
 }
 
 /*sets DataStore connection string*/
@@ -32,87 +28,77 @@ void DataStore::setConnectionString(const std::string &connection){
 
 /*execute sql statement from web service*/
 Table DataStore::execQuery(const std::string & sql) const{
-    connection conn(connectionString);
+    asyncconnection conn(connectionString);
 
-    if(!conn.is_open()){
-        throw std::runtime_error("can't connect to database");
-    }
-
-    nontransaction N(conn);
+    work N(conn);
     pipeline pipe(N);
 
+    result queryResult= pipe.retrieve(pipe.insert(sql));
     Table resultTable;
 
-    const pipeline::query_id idQuery = pipe.insert(sql);
 
-    result queryResult= pipe.retrieve(idQuery);
+    //getting column names
+    for(size_t i=0 ; i<queryResult.columns();++i){
+        resultTable.addColumnName(queryResult.column_name(i));
+    }
 
-
+    //filling resultTable
     for (result::const_iterator row = queryResult.begin();
          row != queryResult.end();
-         ++row)
-     {
+         ++row){
+
         vector<string> tableRow;
-       for (result::tuple::const_iterator field = row->begin();
-            field != row->end();
-            ++field)
-       {
+        for (result::tuple::const_iterator field = row->begin();
+             field != row->end();
+             ++field){
+
             tableRow.push_back(field->c_str());
+        }
 
-            //if first iteration get column names
-            if(row == queryResult.begin())
-            {
-                resultTable.addColumnName(field->name());
-
-            }
-       }
-
-       resultTable.addRow(tableRow);
-     }
+        resultTable.addRow(tableRow);
+    }
     return resultTable;
 }
 
 /*returns names of all tabels in database*/
 vector<string> DataStore::getAllTables(){
     vector<string> tablesNames;
-    connection conn(connectionString);
-
-    if(!conn.is_open()){
-        throw std::runtime_error("can't connect to database");
-    }
+    asyncconnection conn(connectionString);
 
     nontransaction N(conn);
+    pipeline pipe(N);
 
-    result resultQuery( N.exec( "Select table_name from information_schema.tables where table_schema='public'" ));
+
+    result resultQuery= pipe.retrieve(pipe.insert("Select table_name from information_schema.tables where table_schema='public'"));
 
     for (result::const_iterator i=resultQuery.begin(); i!=resultQuery.end();++i) {
-           tablesNames.push_back(i[0].as<std::string>());
-        }
+        tablesNames.push_back(i[0].as<std::string>());
+    }
 
     conn.disconnect();
     return tablesNames;
 }
+
 /*if selected column is foreign key in selected table returns name of related tabel and column name in this tabel*/
 std::tuple<bool,string,string> DataStore::relatedTable(const std::string &tableName, const std::string &columnName) const{
-    connection conn(connectionString);
-
-    if(!conn.is_open()){
-        throw std::runtime_error("can't connect to database");
-    }
+    asyncconnection conn(connectionString);
 
     nontransaction N(conn);
+    pipeline pipe(N);
+
+    string sql = "SELECT ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name "
+                 "FROM information_schema.table_constraints AS tc "
+                 "JOIN information_schema.key_column_usage AS kcu "
+                 "ON tc.constraint_name = kcu.constraint_name "
+                 "JOIN information_schema.constraint_column_usage AS ccu "
+                 "ON ccu.constraint_name = tc.constraint_name "
+                 "WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name='"+ tableName +"' and kcu.column_name='" + columnName +"';";
 
 
-    string fatSelect = "SELECT ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name "
-                       "FROM information_schema.table_constraints AS tc "
-                       "JOIN information_schema.key_column_usage AS kcu "
-                       "ON tc.constraint_name = kcu.constraint_name "
-                       "JOIN information_schema.constraint_column_usage AS ccu "
-                       "ON ccu.constraint_name = tc.constraint_name "
-                       "WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name='"+ tableName +"' and kcu.column_name='" + columnName +"';";
+    const pipeline::query_id idQuery = pipe.insert(sql);
 
+    result resultQuery= pipe.retrieve(idQuery);
 
-    result resultQuery( N.exec( fatSelect));
     conn.disconnect();
     if(resultQuery.size()==0){
         return std::make_tuple(false,"","");
@@ -120,23 +106,25 @@ std::tuple<bool,string,string> DataStore::relatedTable(const std::string &tableN
 
     return std::make_tuple(true,resultQuery.at(0).at(0).c_str(),resultQuery.at(0).at(1).c_str());
 }
+
 /*returns names of columns from table's primary key*/
 vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableName) const{
 
-    connection conn(connectionString);
+    asyncconnection conn(connectionString);
 
-    if(!conn.is_open()){
-        throw std::runtime_error("can't connect to database");
-    }
 
     nontransaction N(conn);
+    pipeline pipe(N);
 
     string query = "SELECT a.attname FROM pg_index i "
-                     "JOIN pg_attribute a ON a.attrelid = i.indrelid "
-                     "AND a.attnum = ANY(i.indkey) "
-                        "WHERE  i.indrelid = ' "+ tableName+ " '::regclass;";
+                   "JOIN pg_attribute a ON a.attrelid = i.indrelid "
+                   "AND a.attnum = ANY(i.indkey) "
+                   "WHERE  i.indrelid = ' "+ tableName+ " '::regclass;";
 
-    result primaryKeyResult( N.exec(query));
+    const pipeline::query_id idQuery = pipe.insert(query);
+
+    result primaryKeyResult= pipe.retrieve(idQuery);
+
     conn.disconnect();
 
     vector <string> primaryKeys;
@@ -147,15 +135,13 @@ vector<std::string> DataStore::getPrimaryKeyColumnName(const std::string &tableN
 
 }
 /*execute select query in optional order with optional pagination*/
+/*returns pair: is last page information & query result*/
 std::pair<bool,Table> DataStore::execSelect(const std::string &sql, vector<std::string> order, int pageSize, int pageNr) const{
 
-    connection conn(connectionString);
+    asyncconnection conn(connectionString);
 
-    if(!conn.is_open()){
-        throw std::runtime_error("can't connect to database");
-    }
     nontransaction N(conn);
-
+    pipeline pipe(N);
     string select = "select * from(" +sql + ") ext ";
 
     //buliding order by statement
@@ -174,32 +160,32 @@ std::pair<bool,Table> DataStore::execSelect(const std::string &sql, vector<std::
     }
     //if pagination arguments are invalid
     else if(pageSize!=-1 || pageNr!=-1){
-            throw std::runtime_error("ivalid pagination argumets");
+        throw std::runtime_error("ivalid pagination argumets");
     }
 
-    //std::cout << "Select : "+select;
     Table resultTable;
     bool isLastTable = false;
     try{
 
-        result queryResult( N.exec(select));
+        const pipeline::query_id idQuery = pipe.insert(select);
+
+        result queryResult= pipe.retrieve(idQuery);
 
         //getting column names
         for(size_t i=0 ; i<queryResult.columns();++i){
             resultTable.addColumnName(queryResult.column_name(i));
         }
 
-         //filling resultTable
+        //filling resultTable
         for (result::const_iterator row = queryResult.begin();
              row !=queryResult.end() ;
-             ++row)
-        {
+             ++row){
+
             //filling resultTable's row
             vector<string> tableRow;
             for (result::tuple::const_iterator field = row->begin();
                  field != row->end();
-                 ++field)
-            {
+                 ++field){
 
                 tableRow.push_back(field->c_str());
             }
@@ -214,9 +200,10 @@ std::pair<bool,Table> DataStore::execSelect(const std::string &sql, vector<std::
     catch(std::exception& e){
         throw std::runtime_error("Invalid query");
     }
-    if(resultTable.tableSize()<=(size_t)pageSize){
+
+    if(resultTable.tableSize()<=pageSize){
         isLastTable=true;
-    }else{
+    }else if(pageSize!=-1 && resultTable.tableSize()!=0){
         resultTable.delRow(resultTable.tableSize()-1);
     }
     return std::make_pair(isLastTable,resultTable);
